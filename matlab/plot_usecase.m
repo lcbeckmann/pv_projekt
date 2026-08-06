@@ -1,6 +1,6 @@
 %PLOT_USECASE  Abbildungen zu Aufgabenpunkt 5.
 
-clear; close all;
+close all;
 fig_style();
 
 load(fullfile('results', 'usecase.mat'));

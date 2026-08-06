@@ -1,6 +1,6 @@
 %PLOT_SENSITIVITY  Abbildungen zu Aufgabenpunkt 6.
 
-clear; close all;
+close all;
 fig_style();
 
 load(fullfile('results', 'sensitivity.mat'));

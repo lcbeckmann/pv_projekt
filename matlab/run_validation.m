@@ -3,7 +3,7 @@
 %   Rechnet NUR. Ergebnis landet in results/validation.mat.
 %   Geplottet wird in plot_validation.m.
 
-clear; close all;
+close all;
 
 p = init_parameters();
 w = load_weather_paper();

@@ -3,7 +3,7 @@
 %   Laedt nur die gespeicherten Ergebnisse. Die Simulation laeuft dabei
 %   NICHT erneut. Wer die Optik aendern will, ruft nur dieses Skript auf.
 
-clear; close all;
+close all;
 fig_style();
 
 load(fullfile('results', 'validation.mat'));

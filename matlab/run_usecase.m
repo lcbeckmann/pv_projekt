@@ -4,7 +4,7 @@
 %   Zusaetzlich werden die Einzelterme der Bilanz mitgeschrieben, weil die
 %   Angabe nach dem dominanten Verlustterm fragt.
 
-clear; close all;
+close all;
 
 p = init_parameters();
 w = load_weather_geosphere();

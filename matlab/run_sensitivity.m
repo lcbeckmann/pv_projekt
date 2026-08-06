@@ -9,7 +9,7 @@
 %   Herteleer et al. argumentieren fuer Sekunden- bis Minutenaufloesung
 %   ueber die Zeitkonstante tau. Mit 10-Minuten-Daten liegen wir dazwischen.
 
-clear; close all;
+close all;
 
 p_nom = init_parameters();
 w     = load_weather_geosphere();
