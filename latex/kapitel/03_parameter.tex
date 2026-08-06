@@ -1,0 +1,48 @@
+\section{Modellparameter}
+\label{sec:parameter}
+
+% VERANTWORTLICH: ...
+% Aufgabenpunkt 3. Die Angabe weist ausdruecklich darauf hin, dass die
+% Parameter in den beiden Papers nicht vollstaendig enthalten sind und
+% dass auf gute Dokumentation zu achten ist.
+
+\subsection{Vorgehen bei der Recherche}
+
+% Wo wurde gesucht, welche Quellen wurden verworfen und warum.
+% Bei Parametern mit stark streuenden Literaturwerten: Bandbreite nennen
+% und auf Kapitel 7 verweisen, dort wird die Streuung untersucht.
+
+\subsection{Parameteruebersicht}
+
+% Diese Tabelle muss zeilenweise zu init_parameters.m passen.
+% Bei jeder Aenderung im Code hier nachziehen.
+
+\begin{longtable}{l l l p{0.30\textwidth} l}
+  \caption{Verwendete Modellparameter mit Quelle und Unsicherheit.}
+  \label{tab:parameter} \\
+  \toprule
+  Symbol & Wert & Einheit & Quelle & Unsicherheit \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Symbol & Wert & Einheit & Quelle & Unsicherheit \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  $A$                     & 1{,}634 & \si{\metre\squared}      & Datenblatt & gering \\
+  $\eta_\mathrm{ref}$     & 0{,}127 & --                       & \cite{tuncel2020} & gering \\
+  $\beta_\mathrm{ref}$    & 0{,}0045 & \si{\per\kelvin}        & \cite{tuncel2020} & mittel \\
+  $\Tref$                 & 298{,}15 & \si{\kelvin}            & STC, IEC 61215 & -- \\
+  $\alpha$                & 0{,}90  & --                       & TODO & mittel \\
+  $\varepsilon_\mathrm{f}$& 0{,}85  & --                       & TODO & mittel \\
+  $h_a$                   & 5{,}7   & \si{\watt\per\metre\squared\per\kelvin} & TODO & hoch \\
+  $h_b$                   & 3{,}8   & \si{\watt\per\metre\squared\per\kelvin} & TODO & hoch \\
+  $\Cm$                   & TODO    & \si{\joule\per\kelvin}   & aus \cref{eq:cm} & hoch \\
+\end{longtable}
+
+\subsection{Herleitung der Waermekapazitaet}
+
+% Schichttabelle mit Dicke, Dichte, spezifischer Waermekapazitaet und Quelle.
+% Tuncel et al. weisen darauf hin, dass die Herstellerangaben zu den Schichten
+% meist fehlen. Das ist ein guter Aufhaenger fuer Kapitel 7.

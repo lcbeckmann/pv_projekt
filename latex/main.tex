@@ -1,0 +1,91 @@
+% =====================================================================
+%  Protokoll: Modellierung und Simulation eines Photovoltaikmoduls
+%  VU Kontinuierliche Simulation, 325.118
+%
+%  Aufbau: jedes Kapitel liegt in kapitel/ als eigene Datei.
+%  Das ist Absicht, damit vier Leute gleichzeitig in Overleaf arbeiten
+%  koennen, ohne sich in einer Datei zu blockieren.
+%
+%  Kompilieren: pdflatex -> bibtex -> pdflatex -> pdflatex
+% =====================================================================
+\documentclass[11pt,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+
+\graphicspath{{abbildungen/}{../matlab/figures/}}
+
+% --- siunitx: Einheiten immer ueber \si oder \SI setzen ---------------
+\sisetup{
+  locale = DE,
+  per-mode = symbol,
+  range-units = single
+}
+
+% --- Einheitliche Symbole, damit alle dasselbe schreiben --------------
+\newcommand{\Tm}{T_\mathrm{m}}
+\newcommand{\Tamb}{T_\mathrm{amb}}
+\newcommand{\Tsky}{T_\mathrm{sky}}
+\newcommand{\Tref}{T_\mathrm{ref}}
+\newcommand{\Cm}{C_\mathrm{m}}
+\newcommand{\Qsolar}{Q_\mathrm{solar}}
+\newcommand{\Qkonv}{Q_\mathrm{konv}}
+\newcommand{\Qrad}{Q_\mathrm{rad}}
+\newcommand{\Wel}{W_\mathrm{el}}
+
+% --- Codelistings -----------------------------------------------------
+\lstset{
+  language=Matlab,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue!60!black},
+  commentstyle=\color{green!40!black},
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny
+}
+
+\title{Modellierung und Simulation eines Photovoltaikmoduls}
+\subtitle{VU Kontinuierliche Simulation, 325.118}
+\author{Vorname Nachname \and Vorname Nachname \and Vorname Nachname \and Vorname Nachname}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\input{kapitel/01_einleitung}
+\input{kapitel/02_modellbildung}
+\input{kapitel/03_parameter}
+\input{kapitel/04_numerik}
+\input{kapitel/05_validierung}
+\input{kapitel/06_anwendungsfall}
+\input{kapitel/07_sensitivitaet}
+\input{kapitel/08_simulink}
+\input{kapitel/09_diskussion}
+\input{kapitel/10_ki_werkzeuge}
+
+\bibliographystyle{unsrt}
+\bibliography{literatur}
+
+\appendix
+\input{kapitel/A_anhang}
+
+\end{document}

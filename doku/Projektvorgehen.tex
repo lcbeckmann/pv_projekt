@@ -1,0 +1,404 @@
+\documentclass[11pt,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage[hidelinks]{hyperref}
+
+\setlist{itemsep=2pt, topsep=4pt}
+
+% deutsche Anfuehrungszeichen auch ohne babel-german verfuegbar
+\providecommand{\glqq}{\quotedblbase}
+\providecommand{\grqq}{\textquotedblleft}
+
+% deutsche Bezeichner auch ohne babel-german
+\renewcommand{\contentsname}{Inhaltsverzeichnis}
+\renewcommand{\tablename}{Tabelle}
+\renewcommand{\figurename}{Abbildung}
+
+\definecolor{kastenrand}{RGB}{60,90,140}
+
+\newtcolorbox{merke}[1][]{
+  colback=blue!3, colframe=kastenrand, boxrule=0.6pt,
+  left=6pt, right=6pt, top=5pt, bottom=5pt, #1}
+
+\newcommand{\Tm}{T_\mathrm{m}}
+\newcommand{\Tamb}{T_\mathrm{amb}}
+\newcommand{\Cm}{C_\mathrm{m}}
+
+\title{Projektvorgehen\\[2mm]\large Modellierung und Simulation eines Photovoltaikmoduls}
+\subtitle{VU Kontinuierliche Simulation, 325.118 -- Arbeitsgrundlage f\"ur die Gruppe}
+\date{}
+\author{}
+
+\begin{document}
+
+\maketitle
+\vspace{-12mm}
+\tableofcontents
+\bigskip
+
+\begin{merke}
+\textbf{Zweck dieses Dokuments.} Es legt fest, wer was macht, in welcher
+Reihenfolge gearbeitet wird und nach welchen Regeln Code und Protokoll
+entstehen. Wer eine Regel brechen will, darf das, muss es aber ansagen und
+im Entscheidungslog vermerken. Das Ziel ist, dass am Ende jeder von uns
+jeden Teil erkl\"aren kann, auch den, den er nicht selbst geschrieben hat.
+\end{merke}
+
+\section{Was verlangt wird}
+
+Die Angabe nennt acht Punkte:
+
+\begin{enumerate}[label=\arabic*.]
+  \item Modellbildung
+  \item Implementierung der Systemgleichungen in MATLAB
+  \item Literaturrecherche der Modellparameter
+  \item Validierung des Modells
+  \item Anwendungsfall
+  \item Sensitivit\"atsanalyse
+  \item Implementierung in Simulink
+  \item Protokoll und Pr\"asentation
+\end{enumerate}
+
+Entscheidend ist der Satz am Ende der Angabe: jeder Schritt muss
+begr\"undbar und nachvollziehbar sein. Bewertet wird also nicht in erster
+Linie, ob die Kurve stimmt, sondern ob wir sagen k\"onnen, warum wir sie so
+gerechnet haben. Das Protokoll ist entsprechend gewichtet: das \glqq Warum\grqq{}
+steht \"uber dem \glqq Was\grqq.
+
+\section{Das Modell in Kurzform}
+
+Bilanzraum ist das Modul ohne Rahmen, betrachtet als ein einziger
+Temperaturknoten. Aus dem ersten Hauptsatz folgt
+
+\begin{equation}
+  \Cm \frac{\mathrm{d}\Tm}{\mathrm{d}t}
+    = Q_\mathrm{solar} - W_\mathrm{el} - Q_\mathrm{konv} - Q_\mathrm{rad}.
+  \label{eq:bilanz}
+\end{equation}
+
+Das Modul hat genau einen unabh\"angigen Energiespeicher, seine
+W\"armekapazit\"at. Der Zustandsvektor hat damit die Ordnung eins, und zwar
+nicht weil wir das so gew\"ahlt haben, sondern weil die Physik es vorgibt.
+Dieser Satz geh\"ort in die Pr\"asentation, er ist der sauberste Bezug zur
+Vorlesung.
+
+Die elektrische Leistung h\"angt selbst von $\Tm$ ab,
+
+\begin{equation}
+  W_\mathrm{el} = G\,A\,(\tau\alpha)\,\eta_\mathrm{ref}
+     \left[1 - \beta_\mathrm{ref}(\Tm - T_\mathrm{ref})\right].
+\end{equation}
+
+Genau diese R\"uckkopplung macht aus der Bilanz eine Differentialgleichung.
+Ohne sie w\"are $\Tm$ eine explizite Formel und das ganze Projekt w\"are
+ein Taschenrechnerproblem.
+
+\subsection*{Was wir bewusst weglassen}
+
+Wir rechnen das \textbf{Basismodell}. Konvektion \"uber einen linearen Ansatz
+$h = h_a + h_b v$, nicht \"uber die vier Nusselt-Str\"omungsregime von Tuncel
+et al.\ mit Windrichtung. Gr\"unde:
+
+\begin{itemize}
+  \item Die Windrichtung aus den GeoSphere-Daten l\"asst sich ohne Kenntnis der
+        genauen Modulausrichtung nicht sinnvoll nutzen.
+  \item Wir k\"onnen die vier Regime mit unseren Daten nicht validieren, wir
+        w\"urden also Komplexit\"at hinzuf\"ugen, die wir nicht pr\"ufen k\"onnen.
+  \item Die Angabe verlangt ausdr\"ucklich \glqq sinnvolle Annahmen und
+        Vereinfachungen\grqq. Weglassen mit Begr\"undung ist die Aufgabe, nicht
+        deren Umgehung.
+\end{itemize}
+
+\begin{merke}
+Wer den Nusselt-Ansatz sp\"ater doch nachr\"usten will: es ist genau eine
+Datei zu \"andern, \texttt{calc\_h\_conv.m}. Der Rest des Codes bleibt
+unber\"uhrt. So ist die Struktur gebaut.
+\end{merke}
+
+\section{Rollen}
+
+\begin{longtable}{l p{0.62\textwidth}}
+  \toprule
+  Rolle & Zust\"andig f\"ur \\
+  \midrule
+  \endhead
+  \textbf{A -- Parameter} &
+    Literaturrecherche aller Modellparameter, F\"ullen von
+    \texttt{init\_parameters.m}, Parametertabelle im Protokoll,
+    Herleitung von $\Cm$ aus dem Schichtaufbau. \\
+  \addlinespace
+  \textbf{B -- Modellkern} &
+    MATLAB-Kern (ODE-Funktion, Solverwahl, Wetterinterpolation),
+    Validierung gegen die Paperdaten, Kapitel Numerik und Validierung. \\
+  \addlinespace
+  \textbf{C -- Daten und Anwendung} &
+    GeoSphere-Daten beschaffen und aufbereiten, Anwendungsfall,
+    Sensitivit\"atsanalyse, Kapitel 6 und 7. \\
+  \addlinespace
+  \textbf{D -- Simulink} &
+    Simulink-Modell, Kopplung mit dem Batteriemodell, Vergleich gegen die
+    MATLAB-L\"osung, Kapitel 8. \\
+  \addlinespace
+  \textbf{Alle} &
+    Modellbildung in der Startsitzung, Annahmentabelle, Pr\"asentation,
+    Gegenlesen der Kapitel der anderen. \\
+  \bottomrule
+\end{longtable}
+
+\begin{merke}
+\textbf{Der Modellkern wird von genau einer Person geschrieben.} Vier Leute
+an derselben ODE-Funktion ist der schnellste Weg zu Code, den hinterher
+niemand mehr versteht. Wer etwas am Kern braucht, sagt es Person B.
+\end{merke}
+
+Eine Person hat zus\"atzlich das Schlusswort \"uber die Struktur des
+Protokolls. Das ist keine inhaltliche Autorit\"at, sondern verhindert nur,
+dass am Ende zehn Kapitel in zehn verschiedenen Stilen dastehen.
+
+\section{Reihenfolge und Meilensteine}
+
+\begin{longtable}{l p{0.50\textwidth} l}
+  \toprule
+  Phase & Inhalt & Wer \\
+  \midrule
+  \endhead
+  0 & Papers lesen, Bilanzgleichung gemeinsam auf Papier, Systemgrenze
+      festlegen, erste Annahmenliste & alle \\
+  0 & GeoSphere-Daten herunterladen (24.06.--01.07.2019, 10-Minuten-Werte) & C \\
+  \addlinespace
+  1 & Parameterrecherche, \texttt{init\_parameters.m} f\"ullen & A \\
+  1 & MATLAB-Kern lauff\"ahig, Testlauf mit Platzhalterdaten & B \\
+  \addlinespace
+  2 & Paperdaten digitalisieren, Validierung, Fehlerma{\ss}e & B, A \\
+  2 & GeoSphere-Daten einlesen, Anwendungsfall rechnen & C \\
+  \addlinespace
+  3 & Sensitivit\"atsanalyse & C \\
+  3 & Simulink-Modell und Batterie & D \\
+  \addlinespace
+  4 & Protokoll ausformulieren, Abbildungen final, Pr\"asentation & alle \\
+  \bottomrule
+\end{longtable}
+
+Phase 0 ist keine Formalie. Wenn die Systemgrenze und die Annahmen nicht
+gemeinsam festgelegt sind, schreibt jeder sp\"ater ein anderes Modell auf.
+
+\begin{merke}
+\textbf{Datenbeschaffung sofort.} Alles ab Aufgabenpunkt~5 h\"angt an den
+GeoSphere-Daten. Erfahrungsgem\"a{\ss} h\"angt es dort: Stationsauswahl,
+Datenl\"ucken, Zeitzone (UTC oder MEZ), und ob Globalstrahlung horizontal
+oder in Modulebene vorliegt. Diese vier Punkte kl\"aren, bevor jemand
+anf\"angt zu rechnen.
+\end{merke}
+
+\section{Ordnerstruktur}
+
+\begin{verbatim}
+pv_projekt/
+  matlab/
+    init_parameters.m        alle Parameter, einzige Stelle mit Zahlen
+    pv_thermal_ode.m         rechte Seite der Bilanz
+    calc_w_el.m              elektrische Leistung
+    calc_h_conv.m            Waermeuebergangskoeffizient
+    calc_q_rad.m             Strahlungsverlust
+    calc_errors.m            MAE, RMSE, MBE
+    build_weather_struct.m   baut die Interpolanten
+    load_weather_paper.m     Validierungsdaten
+    load_weather_geosphere.m Messdaten Anwendungsfall
+    run_validation.m         rechnet  -> results/validation.mat
+    run_usecase.m            rechnet  -> results/usecase.mat
+    run_sensitivity.m        rechnet  -> results/sensitivity.mat
+    plot_validation.m        plottet  <- results/validation.mat
+    plot_usecase.m
+    plot_sensitivity.m
+    fig_style.m              einheitliches Aussehen
+    save_figure.m            Export als Vektor-PDF
+    run_all.m                Steuerung ueber Flags
+    data/  results/  figures/  simulink/
+  latex/
+    main.tex
+    kapitel/01_einleitung.tex ... A_anhang.tex
+    literatur.bib
+  doku/
+    Projektvorgehen.pdf      dieses Dokument
+    annahmen.md              Entscheidungslog
+\end{verbatim}
+
+\section{Arbeitsregeln f\"ur den Code}
+
+\begin{enumerate}[label=\textbf{R\arabic*.}, leftmargin=*]
+  \item \textbf{Keine Zahlenwerte au{\ss}erhalb von \texttt{init\_parameters.m}.}
+        Wer eine Zahl direkt in eine Rechnung schreibt, muss sie sp\"ater in
+        drei Dateien suchen.
+  \item \textbf{Rechnen und Plotten sind getrennt.} \texttt{run\_*.m}
+        speichert nach \texttt{results/}, \texttt{plot\_*.m} l\"adt von dort.
+        Wer nur die Achsenbeschriftung \"andert, startet keine Simulation neu.
+  \item \textbf{Alles in SI, Temperaturen intern in Kelvin.} Umrechnung nach
+        Grad Celsius erst beim Plotten. Einheitenfehler sind die h\"aufigste
+        Fehlerquelle und die am schwersten zu findende.
+  \item \textbf{Gleichungsnummern synchron halten.} Jede Gleichung im
+        Protokoll bekommt ein \texttt{\textbackslash label}, im Code steht
+        dar\"uber \texttt{\% Gl. (2.3)}. Kostet f\"unf Minuten und beantwortet
+        in der Pr\"ufung jede \glqq wo steht das im Code\grqq-Frage sofort.
+  \item \textbf{Sprechende Namen.} \texttt{T\_module} statt \texttt{x1},
+        \texttt{h\_conv} statt \texttt{hc}.
+  \item \textbf{Eine Datei, ein Zweck.} \"Uber etwa 100 Zeilen steckt meist
+        eine Funktion drin, die ausgelagert geh\"ort.
+  \item \textbf{Keine anonymen Funktionen mit Logik.} Ein Wrapper der Form
+        \texttt{@(t,T) pv\_thermal\_ode(t,T,p,w)} ist in Ordnung, alles
+        dar\"uber nicht.
+  \item \textbf{Vektorisierung nur, wo sie sp\"urbar etwas bringt.} Eine
+        lesbare Schleife schl\"agt einen cleveren Einzeiler. Wir werden auf
+        Nachvollziehbarkeit bewertet, nicht auf Rechenzeit.
+  \item \textbf{Kein Feature ohne Aufgabenbezug.} Wenn niemand sagen kann,
+        welchen der acht Punkte eine Funktion bedient, fliegt sie raus.
+  \item \textbf{Versionierung.} Git, oder zumindest datierte Ordner. Nicht
+        \texttt{final\_final\_v3.m}.
+\end{enumerate}
+
+\subsection{Zwei technische Stolpersteine}
+
+\textbf{Wetterdaten m\"ussen interpoliert werden.} Der ODE-Solver w\"ahlt
+seine Zeitschritte selbst und fragt Zeitpunkte ab, die zwischen den
+Messwerten liegen. Die Interpolanten werden einmal in
+\texttt{build\_weather\_struct.m} erzeugt und in die Struct \texttt{w}
+gelegt, nicht bei jedem Aufruf der rechten Seite neu. Lineare Interpolation,
+weil ein Spline bei Bew\"olkungsspr\"ungen \"uberschwingen und negative
+Einstrahlung erzeugen kann.
+
+\textbf{Die Solverwahl muss begr\"undet werden.} Unser System ist skalar,
+ein Steifheitsverh\"altnis ist damit gar nicht definiert, ein steifes
+Problem kann es also nicht sein. Daraus folgt ein explizites Verfahren,
+konkret \texttt{ode45} (Dormand-Prince, Ordnung 5 mit eingebetteter Ordnung 4
+zur Schrittweitensteuerung). Toleranzen setzen wir bewusst auf
+\num{1e-6} statt die Defaults zu nehmen, und wir zeigen einmal, dass sich
+das Ergebnis bei strengerer Toleranz nicht mehr \"andert. Genau das ist der
+Punkt, an dem die Vorlesung gepr\"uft wird, \glqq haben wir immer so gemacht\grqq{}
+reicht nicht.
+
+\section{Arbeitsregeln f\"ur das Protokoll}
+
+Kapitelstruktur:
+
+\begin{enumerate}[leftmargin=*]
+  \item Einleitung und Aufgabenstellung
+  \item Modellbildung (Systemabgrenzung, Bilanz, Zustandswahl, Teilmodelle,
+        \textbf{Annahmentabelle})
+  \item Modellparameter (Recherche, Parametertabelle mit Quellen)
+  \item Numerische Umsetzung (Programmstruktur, Solverwahl, Interpolation)
+  \item Validierung (Vorgehen, Fehlerma{\ss}e, Ergebnisse, Diskussion der Abweichungen)
+  \item Anwendungsfall (Datengrundlage, Ergebnisse, dominanter Verlustterm)
+  \item Sensitivit\"atsanalyse
+  \item Simulink und Batterieladung
+  \item Diskussion und Grenzen des Modells
+  \item Verwendung von KI-Werkzeugen
+\end{enumerate}
+
+Jedes Kapitel ist in Overleaf eine eigene Datei unter \texttt{kapitel/}.
+So k\"onnen vier Leute gleichzeitig schreiben, ohne sich zu blockieren. Ganz
+oben in jeder Datei steht ein Kommentarblock mit \texttt{VERANTWORTLICH:}
+und einer Liste, was in dieses Kapitel geh\"ort und was nicht.
+
+\subsection{Die Annahmentabelle}
+
+Das ist das St\"uck, das \"uber die Note entscheidet. Drei Spalten: was wurde
+angenommen, warum ist das zul\"assig, was kostet es voraussichtlich. Beispiel:
+
+\begin{center}
+\small
+\begin{tabular}{p{0.26\textwidth} p{0.34\textwidth} p{0.28\textwidth}}
+  \toprule
+  Annahme & Begr\"undung & Erwartete Auswirkung \\
+  \midrule
+  Modul als ein Temperaturknoten &
+    Laminatdicke rund \SI{3}{\milli\metre}, Biot-Zahl klein &
+    kein Gradient abbildbar, im Mittel vernachl\"assigbar \\
+  Bodentemperatur gleich $\Tamb$ &
+    keine Messdaten verf\"ugbar &
+    untersch\"atzt R\"uckseitenverluste bei aufgeheiztem Untergrund \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{merke}
+\textbf{Regel: neue Annahme im Code heisst neue Zeile in der Tabelle.} Wer
+im Code etwas vereinfacht, ohne es einzutragen, hat die Arbeit nur
+verschoben, nicht erledigt.
+\end{merke}
+
+Parallel dazu f\"uhren wir \texttt{doku/annahmen.md} als Entscheidungslog:
+Datum, Entscheidung, Begr\"undung, wer. Eine Zeile pro Eintrag, keine Prosa.
+Daraus wird sp\"ater die Tabelle.
+
+\subsection{Abbildungen}
+
+Die Protokolltipps der LVA zeigen konkrete Negativbeispiele. Was dort
+kritisiert wird:
+
+\begin{itemize}
+  \item fehlende Achsenbeschriftung, unbekannte Einheiten
+  \item Legende vorhanden, aber unsauber beschriftet (etwa \texttt{phi0})
+  \item gleiche Linienart f\"ur alle Kurven, Unterscheidung nur \"uber Farbe
+  \item zu kleine Plots, Schriftgr\"o{\ss}e passt nicht zum Flie{\ss}text
+  \item Redundanz zwischen Plottitel, Achsenbeschriftung und Bildunterschrift
+  \item Simulink-Scopes direkt ins Protokoll kopiert
+  \item nichtssagende Bildunterschriften wie \glqq Simulationsgraph Simulation 2\grqq
+\end{itemize}
+
+Die zugeh\"orige Checkliste f\"ur wissenschaftliche Arbeiten verlangt
+zus\"atzlich: Vektorgrafik, sinnvoller Bildausschnitt ohne gro{\ss}e leere
+Fl\"achen, kein Informationsverlust im Schwarzwei{\ss}druck, fortlaufende
+Nummerierung, und eine Bildunterschrift, die die Abbildung unabh\"angig vom
+Text verst\"andlich macht und die Kernaussage benennt.
+
+Praktisch hei{\ss}t das f\"ur uns: \texttt{fig\_style.m} am Anfang jedes
+Plotskripts aufrufen, Export \"uber \texttt{save\_figure.m} als
+Vektor-PDF, unterschiedliche Linienarten statt nur Farben, und meist gar
+keinen Plottitel setzen, weil die Bildunterschrift das \"ubernimmt.
+
+\subsection{KI-Werkzeuge}
+
+Die Nutzung ist erlaubt und muss nicht verschleiert werden. Kapitel 10
+beschreibt: welche Werkzeuge, wof\"ur konkret, und vor allem \emph{wie
+gepr\"uft wurde}. Der letzte Punkt ist der, auf den es ankommt. Jede
+\"ubernommene Formel wird gegen die Prim\"arquelle gepr\"uft, jeder Parameter
+gegen die zitierte Arbeit. Was verworfen wurde, wird ebenfalls erw\"ahnt.
+
+\section{Offene Punkte}
+
+\begin{longtable}{p{0.52\textwidth} l l}
+  \toprule
+  Was & Wer & Bis wann \\
+  \midrule
+  \endhead
+  GeoSphere-Datensatz ausw\"ahlen und herunterladen & C & \\
+  Zeitzone und Datenl\"ucken kl\"aren & C & \\
+  Paperdaten aus Tuncel Abb.~1 digitalisieren & B & \\
+  Umgebungstemperatur f\"ur die Validierung festlegen (Paper macht keine Angabe) & B & \\
+  Alle \texttt{TODO Quelle} in \texttt{init\_parameters.m} belegen & A & \\
+  Schichtaufbau f\"ur $\Cm$ mit Quellen hinterlegen & A & \\
+  Modulausrichtung und Neigung festlegen & alle & \\
+  Batteriemodell von der LVA anfordern & D & \\
+  Simulink-Onramp durcharbeiten & D & \\
+  \bottomrule
+\end{longtable}
+
+\section{Woran wir merken, dass es gut l\"auft}
+
+\begin{itemize}
+  \item Jede Zahl im Code hat eine Quelle im Kommentar.
+  \item Jede Gleichung im Protokoll hat eine Nummer, die im Code vorkommt.
+  \item Die Annahmentabelle w\"achst mit dem Code mit, nicht erst am Schluss.
+  \item Wer ein Kapitel nicht geschrieben hat, kann es trotzdem erkl\"aren.
+  \item Ein \texttt{plot\_*.m}-Aufruf braucht keine Neuberechnung.
+\end{itemize}
+
+\end{document}

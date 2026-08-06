@@ -1,0 +1,27 @@
+\section{Anhang}
+\label{sec:anhang}
+
+\subsection{Uebersicht der Programmdateien}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Dateien der MATLAB-Implementierung und ihre Aufgabe.}
+  \label{tab:dateien}
+  \begin{tabular}{l p{0.6\textwidth}}
+    \toprule
+    Datei & Aufgabe \\
+    \midrule
+    \texttt{init\_parameters.m}     & alle Parameter, einzige Stelle mit Zahlenwerten \\
+    \texttt{pv\_thermal\_ode.m}     & rechte Seite von \cref{eq:bilanz} \\
+    \texttt{calc\_w\_el.m}          & \cref{eq:wel} \\
+    \texttt{calc\_h\_conv.m}        & \cref{eq:qkonv} \\
+    \texttt{calc\_q\_rad.m}         & \cref{eq:qrad} \\
+    \texttt{run\_validation.m}      & Rechnung zu \cref{sec:validierung} \\
+    \texttt{run\_usecase.m}         & Rechnung zu \cref{sec:anwendungsfall} \\
+    \texttt{run\_sensitivity.m}     & Rechnung zu \cref{sec:sensitivitaet} \\
+    \texttt{plot\_*.m}              & Abbildungen, laden nur gespeicherte Ergebnisse \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Herleitungen}

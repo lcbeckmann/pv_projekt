@@ -1,0 +1,31 @@
+\section{Numerische Umsetzung}
+\label{sec:numerik}
+
+% VERANTWORTLICH: ...
+
+\subsection{Programmstruktur}
+
+% Kurze Uebersicht der Dateien und wer was aufruft. Ein Absatz plus Liste
+% reicht, der Code selbst gehoert nicht ins Protokoll.
+% Erwaehnen: Rechnen und Plotten sind getrennt, Ergebnisse werden in
+% .mat-Dateien zwischengespeichert.
+
+\subsection{Wahl des Loesungsverfahrens}
+\label{sec:solver}
+
+% Das ist der Abschnitt, in dem die Vorlesung am direktesten geprueft wird.
+% Zu beantworten:
+%   - Ist das Problem steif? Das System ist skalar, ein Steifheitsverhaeltnis
+%     ist damit gar nicht definiert. Daraus folgt die Wahl eines expliziten
+%     Verfahrens.
+%   - Warum ode45 (Dormand-Prince, Ordnung 5 mit eingebetteter Ordnung 4
+%     zur Schrittweitensteuerung) und nicht ode15s.
+%   - Welche Toleranzen wurden gesetzt und warum nicht die Defaults.
+%   - Nachweis der Loesungsunabhaengigkeit: Rechnung mit strengerer Toleranz
+%     wiederholen und zeigen, dass sich das Ergebnis nicht mehr aendert.
+
+\subsection{Behandlung der Wetterdaten}
+
+% Warum die Messreihen interpoliert werden muessen: der Solver waehlt seine
+% Zeitschritte adaptiv und fragt Zeitpunkte zwischen den Messwerten ab.
+% Warum lineare und nicht kubische Interpolation.

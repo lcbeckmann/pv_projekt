@@ -1,0 +1,126 @@
+\section{Modellbildung}
+\label{sec:modellbildung}
+
+% VERANTWORTLICH: ...
+% Das ist das wichtigste Kapitel. Hier steht das "Warum".
+
+\subsection{Systemabgrenzung und Blockschaltbild}
+\label{sec:abgrenzung}
+
+% Phase 1 der Modellbildung nach der Vorlesung: Aufteilung in Subsysteme,
+% Definition der Systemgrenze, Klaerung der Ein- und Ausgangsgroessen.
+% Ergebnis ist das Blockschaltbild aus der Angabe.
+% Explizit benennen: Bilanzraum ist das Modul ohne Rahmen.
+
+Eingaenge sind $G$ und $\Tamb$, Ausgaenge sind $\Tm$ und $\Wel$.
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.6\textwidth]{blockschaltbild}
+  \caption{Whitebox-Modell des Photovoltaikmoduls mit den Eingangsgroessen
+           Globalstrahlung und Umgebungstemperatur sowie den Ausgangsgroessen
+           Modultemperatur und elektrischer Leistung.}
+  \label{fig:blockschaltbild}
+\end{figure}
+
+\subsection{Energiebilanz und Wahl des Zustands}
+\label{sec:bilanz}
+
+% Phase 2: Naturgesetze anwenden. Hier der erste Hauptsatz.
+% Warum genau ein Zustand: das Modul besitzt genau einen unabhaengigen
+% Energiespeicher, naemlich seine Waermekapazitaet. Die Ordnung des
+% Zustandsvektors folgt damit direkt aus der Physik und ist nicht frei
+% gewaehlt. Dieser Absatz ist der direkteste Bezug zur Vorlesung.
+
+\begin{equation}
+  \Cm \frac{\mathrm{d}\Tm}{\mathrm{d}t}
+    = \Qsolar - \Wel - \Qkonv - \Qrad
+  \label{eq:bilanz}
+\end{equation}
+
+\subsection{Einstrahlung und elektrische Leistung}
+\label{sec:elektrisch}
+
+\begin{equation}
+  \Qsolar = \alpha\, G\, A
+  \label{eq:qsolar}
+\end{equation}
+
+\begin{equation}
+  \Wel = G\, A\, (\tau\alpha)\, \eta_\mathrm{ref}
+         \left[ 1 - \beta_\mathrm{ref} (\Tm - \Tref) \right]
+  \label{eq:wel}
+\end{equation}
+
+% Wichtig fuers "Warum": \Wel haengt von \Tm ab. Genau diese Rueckkopplung
+% macht aus der Bilanz eine Differentialgleichung. Ohne sie waere \Tm eine
+% explizite Formel. Das gehoert ausformuliert.
+
+\subsection{Konvektion}
+\label{sec:konvektion}
+
+\begin{equation}
+  \Qkonv = h\, A_\mathrm{konv} (\Tm - \Tamb),
+  \qquad h = h_a + h_b\, v
+  \label{eq:qkonv}
+\end{equation}
+
+% Begruendung des linearen Ansatzes gegenueber dem Nusselt-Ansatz von
+% Tuncel et al. Argumente: Windrichtung ist in den GeoSphere-Daten nicht
+% zuverlaessig nutzbar, die vier Stroemungsregime sind nicht validierbar,
+% der Rechenaufwand steht in keinem Verhaeltnis zur erreichbaren Genauigkeit.
+% Diese Entscheidung ist der Kern von Aufgabenpunkt 1 ("sinnvolle Annahmen
+% und Vereinfachungen") und muss ausformuliert werden.
+
+\subsection{Strahlung}
+\label{sec:strahlung}
+
+\begin{equation}
+  \Qrad = \sigma A \left[
+            \varepsilon_\mathrm{f} (\Tm^4 - \Tsky^4)
+          + \varepsilon_\mathrm{b} (\Tm^4 - \Tamb^4) \right],
+  \qquad \Tsky = 0{,}0552\, \Tamb^{1{,}5}
+  \label{eq:qrad}
+\end{equation}
+
+\subsection{Waermekapazitaet}
+\label{sec:kapazitaet}
+
+\begin{equation}
+  \Cm = A \sum_n d_n\, \rho_n\, c_{p,n}
+  \label{eq:cm}
+\end{equation}
+
+\subsection{Getroffene Annahmen}
+\label{sec:annahmen}
+
+% Kernstueck des Protokolls. Jede Zeile: was wurde angenommen, warum ist
+% das zulaessig, was kostet es voraussichtlich an Genauigkeit.
+% Die Tabelle waechst waehrend des Projekts mit. Neue Annahme im Code
+% heisst neue Zeile hier.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Getroffene Annahmen und Vereinfachungen mit Begruendung und
+           erwarteter Auswirkung auf das Ergebnis.}
+  \label{tab:annahmen}
+  \begin{tabular}{p{0.28\textwidth} p{0.36\textwidth} p{0.28\textwidth}}
+    \toprule
+    Annahme & Begruendung & Erwartete Auswirkung \\
+    \midrule
+    Modul als ein Temperaturknoten (Lumped) &
+      Laminatdicke rund \SI{3}{\milli\metre}, Biot-Zahl klein &
+      Kein Temperaturgradient abbildbar, im Mittel vernachlaessigbar \\
+    Waermeleitung vernachlaessigt &
+      folgt aus der Lumped-Annahme &
+      gering \\
+    Bodentemperatur gleich $\Tamb$ &
+      keine Messdaten verfuegbar &
+      unterschaetzt Rueckseitenverluste bei aufgeheiztem Untergrund \\
+    Lineare Konvektion statt Nusselt-Ansatz &
+      siehe \cref{sec:konvektion} &
+      \dots \\
+    \dots & \dots & \dots \\
+    \bottomrule
+  \end{tabular}
+\end{table}
