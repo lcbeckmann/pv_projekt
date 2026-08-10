@@ -18,7 +18,7 @@ Nur zuordnen, nicht diskutieren. Widerspruch klärt sich in zwei Minuten.
 
 | Rolle | Wer |
 |---|---|
-| Parameterrecherche und Parametertabelle | |
+| Parameterrecherche und Parametertabelle |Tom |
 | MATLAB-Kern und Validierung | |
 | GeoSphere-Daten, Anwendungsfall, Sensitivität | |
 | Simulink und Batteriemodell | |
