@@ -19,10 +19,10 @@ Nur zuordnen, nicht diskutieren. Widerspruch klärt sich in zwei Minuten.
 | Rolle | Wer |
 |---|---|
 | Parameterrecherche und Parametertabelle |Tom |
-| MATLAB-Kern und Validierung | |
-| GeoSphere-Daten, Anwendungsfall, Sensitivität | |
-| Simulink und Batteriemodell | |
-| Schlusswort über die Protokollstruktur | |
+| MATLAB-Kern und Validierung |Linus |
+| GeoSphere-Daten, Anwendungsfall, Sensitivität |Matyas|
+| Simulink und Batteriemodell | Lars|
+| Schlusswort über die Protokollstruktur | Lars|
 
 Der MATLAB-Kern wird von einer Person geschrieben. Wer etwas daran braucht,
 sagt es dieser Person.
