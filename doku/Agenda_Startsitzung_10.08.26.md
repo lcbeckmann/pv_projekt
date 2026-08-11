@@ -61,22 +61,22 @@ Der eigentliche Kern der Sitzung. Jede Entscheidung geht sofort in
 Fläche, Wirkungsgrad, Temperaturkoeffizient. Entweder die Werte aus dem
 Tuncel-Paper oder ein reales Datenblatt.
 Empfehlung: Paper, weil wir dann validieren können.
-→ Entscheidung: ______
+→ Entscheidung: Das meiste aus dem Tuncel paper. Wenn nötigt aus anderen Papern begründet ergaenzen.
 
 **b) Neigung, Ausrichtung, Strahlungsebene.**
 Nehmen wir die Globalstrahlung horizontal, wie GeoSphere sie liefert, oder
 rechnen wir auf Modulebene um? Direkt zu verwenden ist zulässig, ist aber eine
 Annahme und gehört in die Tabelle.
-→ Entscheidung: ______
+→ Entscheidung: Wir nehmen die Daten so an wie sie in geosphere sind als horizontale.
 
 **c) Welche Umgebungstemperatur für die Validierung?**
 Das Tuncel-Paper macht dazu keine Angabe. Wir brauchen einen Wert und eine
 Begründung.
-→ Entscheidung: ______
+→ Entscheidung: Umgebungstemperatur wird aus dem Graphen im Tuncel paper abgeleitet.
 
 **d) Welche GeoSphere-Station?**
 Mit Begründung, die später ins Protokoll kann.
-→ Entscheidung: ______
+→ Entscheidung: Wien Hohe Lage
 
 ### Bereits vorgeschlagen, bitte bestätigen oder widersprechen
 
@@ -98,14 +98,14 @@ Jeder Punkt bekommt einen Namen und ein Datum. Ohne Datum passiert nichts.
 
 | Was | Wer | Bis wann |
 |---|---|---|
-| GeoSphere-Daten herunterladen (24.06.–01.07.2019, 10-min-Werte) | | |
-| Zeitzone und Datenlücken klären | | |
-| Paperdaten aus Tuncel Abb. 1 digitalisieren | | |
-| Alle `TODO Quelle` in `init_parameters.m` belegen | | |
-| Schichtaufbau für C_m mit Quellen hinterlegen | | |
-| Batteriemodell von der LVA besorgen | | |
-| Simulink Onramp durcharbeiten | | |
-| Ablage für Papers und Folien anlegen | | |
+| GeoSphere-Daten herunterladen (24.06.–01.07.2019, 10-min-Werte) |Lars | |
+| Zeitzone und Datenlücken klären | Lars| |
+| Paperdaten aus Tuncel Abb. 1 digitalisieren |Tom | |
+| Alle `TODO Quelle` in `init_parameters.m` belegen | Tom| |
+| Schichtaufbau für C_m mit Quellen hinterlegen |Tom | |
+| Batteriemodell von der LVA besorgen |Lars | |
+| Simulink Onramp durcharbeiten |Lars | |
+
 
 ---
 
@@ -115,7 +115,7 @@ Ein Abgabedatum allein reicht nicht.
 
 | Meilenstein | Datum |
 |---|---|
-| Daten da, Parameter belegt, MATLAB rechnet mit echten Zahlen | |
+| Daten da, Parameter belegt, MATLAB rechnet mit echten Zahlen | 15.08|
 | Validierung fertig inklusive Fehlermaßen | |
 | Anwendungsfall gerechnet, Simulink läuft | |
 | Sensitivitätsanalyse fertig, alle Abbildungen final | |
