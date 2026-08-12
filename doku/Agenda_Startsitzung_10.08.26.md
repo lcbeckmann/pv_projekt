@@ -61,7 +61,7 @@ Der eigentliche Kern der Sitzung. Jede Entscheidung geht sofort in
 Fläche, Wirkungsgrad, Temperaturkoeffizient. Entweder die Werte aus dem
 Tuncel-Paper oder ein reales Datenblatt.
 Empfehlung: Paper, weil wir dann validieren können.
-→ Entscheidung: Das meiste aus dem Tuncel paper. Wenn nötigt aus anderen Papern begründet ergaenzen.
+→ Entscheidung: Das meiste aus dem Tuncel paper. Wenn nötig aus anderen Papern begründet ergaenzen.
 
 **b) Neigung, Ausrichtung, Strahlungsebene.**
 Nehmen wir die Globalstrahlung horizontal, wie GeoSphere sie liefert, oder
