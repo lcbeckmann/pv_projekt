@@ -9,31 +9,60 @@ function p = init_parameters()
 %
 %   Jede Zeile mit einer Zahl braucht eine Quelle im Kommentar.
 %   Aufgabenpunkt 3 (Literaturrecherche) wird genau hier abgearbeitet.
-%   Alle mit TODO markierten Werte sind Platzhalter und muessen belegt werden.
+%   Stand: alle TODO-Quelle-Marker aufgeloest (siehe doku/annahmen.md fuer
+%   die zugehoerigen Annahmen-Eintraege und Kapitel 3 des Protokolls fuer
+%   die ausformulierte Begruendung).
 
 % ---------------------------------------------------------------------
 % 1) Modulgeometrie
 % ---------------------------------------------------------------------
-p.L        = 1.650;      % Modullaenge                         [m]   TODO Quelle (Datenblatt)
-p.B        = 0.990;      % Modulbreite                         [m]   TODO Quelle (Datenblatt)
+% Kein Datenblatt vorhanden (Entscheidung Startsitzung: Modul primaer nach
+% Tuncel et al. 2020, dort aber KEINE Modulabmessungen angegeben, nur
+% eta_ref, beta_ref, Neigung). Fuer L und B daher Industriestandard eines
+% 60-zelligen c-Si-Moduls (~1.65 m x 0.99 m) angesetzt; das ist die mit
+% Abstand haeufigste Modulgroesse fuer Module in dieser Effizienzklasse
+% (12.7 %, siehe unten) und ergibt A ~ 1.63 m^2, konsistent mit der
+% Modulflaeche A = 1.6 m^2, die Herteleer et al. 2023 (Tab. 1) fuer ihr
+% Referenzmodul durchgaengig verwendet. Explizit als Annahme dokumentiert,
+% da kein Original-Datenblatt der GUENAM-Anlage vorliegt.
+p.L        = 1.650;      % Modullaenge                         [m]   Industriestandard 60-Zellen-Modul; konsistent mit A~1.6 m^2 bei Herteleer et al. 2023, Tab. 1
+p.B        = 0.990;      % Modulbreite                         [m]   Industriestandard 60-Zellen-Modul; konsistent mit A~1.6 m^2 bei Herteleer et al. 2023, Tab. 1
 p.A        = p.L * p.B;  % Aperturflaeche                      [m^2]
 p.A_conv   = 2 * p.A;    % konvektiv wirksame Flaeche (Vorder- + Rueckseite) [m^2]
-p.theta    = deg2rad(32);% Neigungswinkel zur Horizontalen     [rad]  Tuncel et al. 2020
+p.theta    = deg2rad(32);% Neigungswinkel zur Horizontalen     [rad]  Tuncel et al. 2020, Kap. 2.4 (Validierungsmodul GUENAM Ankara: 32 Grad, suedorientiert)
 
 % ---------------------------------------------------------------------
 % 2) Optische Eigenschaften
 % ---------------------------------------------------------------------
-p.alpha_abs = 0.90;      % effektiver Absorptionsgrad der Einstrahlung  [-] TODO Quelle
-p.tau_alpha = 0.90;      % Transmissions-Absorptions-Produkt der Zelle  [-] TODO Quelle
-p.eps_front = 0.85;      % Emissionsgrad Frontglas (langwellig)         [-] TODO Quelle
-p.eps_back  = 0.90;      % Emissionsgrad Rueckseite                     [-] TODO Quelle
+% alpha_abs und tau_alpha: Standardannahme nach Duffie & Beckman (1991,
+% uebernommen in spaeteren Auflagen bis 2013), wonach das Produkt aus
+% solarer Transmission und Absorption fuer PV-Module pauschal mit 0.9
+% angesetzt wird, da eine praezisere spektrale Aufloesung fuer die
+% thermische Modellierung nicht entscheidend ist (Begruendung: der
+% Modellfehler durch diese Vereinfachung ist klein gegenueber anderen
+% Modellunsicherheiten, siehe z.B. HOMER-Doku, die sich explizit auf
+% Duffie & Beckman 1991 beruft). Unabhaengig bestaetigt durch gemessene
+% Absorption gekapselter c-Si-Zellen von ca. 90.5% bei AM1.5 (Literatur
+% zum Absorptionsgrad von c-Si-Zellen).
+p.alpha_abs = 0.90;      % effektiver Absorptionsgrad der Einstrahlung  [-] Duffie & Beckman 1991 (Standardannahme tau*alpha = 0.9)
+p.tau_alpha = 0.90;      % Transmissions-Absorptions-Produkt der Zelle  [-] Duffie & Beckman 1991 (Standardannahme tau*alpha = 0.9)
+
+% eps_front, eps_back: Emissionsgrade im langwelligen (IR-)Bereich.
+% Driesse, Stein & Theristis (2022, Sandia-Report) geben als Literatur-
+% spanne fuer Solarglas 0.84-0.91 und fuer Polymer-Backsheets 0.85-0.89 an
+% (basierend auf mehreren zitierten Materialmessungen). Wir setzen je
+% einen plausiblen Wert aus der Mitte des jeweiligen Bereichs; unabhaengig
+% bestaetigt durch weitere Literatur (Solarglas eps ~ 0.84, PVF-Backsheet
+% eps ~ 0.85).
+p.eps_front = 0.87;      % Emissionsgrad Frontglas (langwellig)         [-] Driesse, Stein & Theristis 2022 (Bereich 0.84-0.91 fuer Solarglas)
+p.eps_back  = 0.87;      % Emissionsgrad Rueckseite                     [-] Driesse, Stein & Theristis 2022 (Bereich 0.85-0.89 fuer Polymer-Backsheet)
 
 % ---------------------------------------------------------------------
 % 3) Elektrisches Teilmodell
 % ---------------------------------------------------------------------
-p.eta_ref  = 0.127;      % Wirkungsgrad bei Referenzbedingungen   [-]    Tuncel et al. 2020
-p.beta_ref = 0.0045;     % Temperaturkoeffizient der Leistung     [1/K]  Tuncel et al. 2020
-p.T_ref    = 273.15 + 25;% Referenztemperatur (STC)               [K]    IEC 61215
+p.eta_ref  = 0.127;      % Wirkungsgrad bei Referenzbedingungen   [-]    Tuncel et al. 2020, Kap. 2.4
+p.beta_ref = 0.0045;     % Temperaturkoeffizient der Leistung     [1/K]  Tuncel et al. 2020, Kap. 2.4
+p.T_ref    = 273.15 + 25;% Referenztemperatur (STC)               [K]    IEC 61215 (Standard Test Conditions, 25 degC)
 
 % ---------------------------------------------------------------------
 % 4) Konvektion (Basismodell: linearer Ansatz nach McAdams)
@@ -41,8 +70,12 @@ p.T_ref    = 273.15 + 25;% Referenztemperatur (STC)               [K]    IEC 612
 %    Bewusste Vereinfachung gegenueber dem Nusselt-Ansatz von Tuncel et al.
 %    Begruendung siehe Protokoll, Abschnitt "Getroffene Annahmen".
 % ---------------------------------------------------------------------
-p.h_a      = 5.7;        % freier Anteil                        [W/(m^2 K)] TODO Quelle
-p.h_b      = 3.8;        % windabhaengiger Anteil               [W/(m^2 K)/(m/s)] TODO Quelle
+% McAdams-Korrelation h_w = 5.7 + 3.8*v, referenziert bei Duffie & Beckman
+% (1991/2013, "Solar Engineering of Thermal Processes") und in der Review
+% von Skoplaki & Palyvos (2009) als Standardkorrelation fuer die
+% windabhaengige Konvektion an ebenen Kollektor-/Modulflaechen verwendet.
+p.h_a      = 5.7;        % freier Anteil                        [W/(m^2 K)]        Duffie & Beckman 1991/2013 (McAdams-Korrelation), zit. n. Skoplaki & Palyvos 2009
+p.h_b      = 3.8;        % windabhaengiger Anteil               [W/(m^2 K)/(m/s)]  Duffie & Beckman 1991/2013 (McAdams-Korrelation), zit. n. Skoplaki & Palyvos 2009
 
 % ---------------------------------------------------------------------
 % 5) Strahlung
@@ -56,13 +89,28 @@ p.c_sky    = 0.0552;         % Koeffizient Himmelstemperatur    [K^-0.5]      Sw
 % 6) Waermekapazitaet aus dem Schichtaufbau
 %    C_m = A * sum_n ( d_n * rho_n * cp_n )
 %    Spalten: Dicke [m] | Dichte [kg/m^3] | spez. Waermekap. [J/(kg K)]
+%
+%    Primaerquelle fuer alle fuenf Zeilen: Herteleer et al. 2023, Tab. 1
+%    ("representative glass-tedlar Smart PV module"), dort transparent je
+%    Schicht mit L, rho, cp ausgewiesen. Rahmen und Luftfilme werden NICHT
+%    mitgerechnet, da unser Modul-Whitebox-Modell (Aufgabenpunkt 1) den
+%    Aluminiumrahmen nicht als eigenen Waermespeicher fuehrt (siehe
+%    Bilanzraum-Definition in KI_Kontext.md: "Modul ohne Rahmen").
+%    Ergaenzender, unabhaengiger Vergleichswert (nur als Plausibilitaets-
+%    check, nicht als Ersatz): Tuncel et al. 2020, Kap. 2.3+3, berechnen
+%    fuer ihr (anderes) poly-c-Si-Modul c_eq ~ 5.7 kJ/(m^2 K) nach
+%    identischer Summenformel (dort mit Daten aus Jones & Underwood 2001).
+%    Das liegt in derselben Groessenordnung wie der hier verwendete
+%    Schichtstapel-Wert (~7.6 kJ/(m^2 K)), siehe
+%    doku/Schichtaufbau_Cm_Dokumentation.md fuer die vollstaendige
+%    Herleitung und den Tabellenvergleich.
 % ---------------------------------------------------------------------
 schichten = [ ...
-    3.2e-3, 2500, 500 ;  ... % Frontglas          TODO Quelle
-    0.5e-3,  960, 2090;  ... % EVA vorne          TODO Quelle
-    0.2e-3, 2330,  677;  ... % Silizium-Zellen    TODO Quelle
-    0.5e-3,  960, 2090;  ... % EVA hinten         TODO Quelle
-    0.3e-3, 1200, 1250 ];    % Rueckseitenfolie   TODO Quelle
+    3.2e-3, 3000, 500 ;  ... % Frontglas          Herteleer et al. 2023, Tab. 1 (Solarglas, gehaertet; korrigiert von 2500 auf 3000 kg/m^3)
+    0.5e-3,  960, 2090;  ... % EVA vorne          Herteleer et al. 2023, Tab. 1
+    0.2e-3, 2330,  677;  ... % Silizium-Zellen    Herteleer et al. 2023, Tab. 1 (dort zwei Zellschichten je 0.1 mm, hier zusammengefasst zu 0.2 mm)
+    0.5e-3,  960, 2090;  ... % EVA hinten         Herteleer et al. 2023, Tab. 1
+    0.3e-3, 1200, 1250 ];    % Rueckseitenfolie   Herteleer et al. 2023, Tab. 1 (Tedlar/PVF-Backsheet)
 
 p.schichten = schichten;
 p.c_area    = sum(schichten(:,1) .* schichten(:,2) .* schichten(:,3)); % [J/(m^2 K)]

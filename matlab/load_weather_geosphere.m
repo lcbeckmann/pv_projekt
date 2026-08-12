@@ -22,17 +22,14 @@ end
 
 T = readtable(csv_datei);
 
-% ---------------------------------------------------------------------
-% Spaltennamen an den tatsaechlichen Export anpassen.
-% ---------------------------------------------------------------------
-zeit    = T.time;          % TODO Spaltenname pruefen
-G       = T.cglo;          % TODO Spaltenname pruefen  [W/m^2]
-Tamb_C  = T.tl;            % TODO Spaltenname pruefen  [degC]
-v       = T.ff;            % TODO Spaltenname pruefen  [m/s]
+zeit    = T.time;          % 
+G       = T.cglo;          %  [W/m^2]
+Tamb_C  = T.tl;            %  [degC]
+v       = T.ff;            %  [m/s]
 
-% Zeitachse in Sekunden seit Beginn
+% Zeitachse in sekunden seit Beginn
 if ~isdatetime(zeit)
-    zeit = datetime(zeit, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss');
+    zeit = datetime(zeit, 'InputFormat', 'yyyy-MM-dd''T''HH:mmXXX','TimeZone','UTC');
 end
 t = seconds(zeit - zeit(1));
 
