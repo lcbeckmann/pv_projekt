@@ -115,7 +115,7 @@ Ein Abgabedatum allein reicht nicht.
 
 | Meilenstein | Datum |
 |---|---|
-| Daten da, Parameter belegt, MATLAB rechnet mit echten Zahlen | 15.08|
+| Daten da, Parameter belegt, MATLAB rechnet mit echten Zahlen | 16.08|
 | Validierung fertig inklusive Fehlermaßen | |
 | Anwendungsfall gerechnet, Simulink läuft | |
 | Sensitivitätsanalyse fertig, alle Abbildungen final | |
