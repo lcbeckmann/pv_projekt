@@ -29,8 +29,7 @@ v       = T.ff;            %  [m/s]
 
 % Zeitachse in sekunden seit Beginn
 if ~isdatetime(zeit)
-    zeit = datetime(zeit, 'InputFormat', 'yyyy-MM-dd''T''HH:mmXXX');
-    zeit.TimeZone = '';
+    zeit = datetime(zeit, 'InputFormat', 'yyyy-MM-dd''T''HH:mmXXX','TimeZone','UTC');
     zeit.TimeZone = 'UTC+2';
 end
 t = seconds(zeit - zeit(1));
