@@ -116,6 +116,10 @@ p.schichten = schichten;
 p.c_area    = sum(schichten(:,1) .* schichten(:,2) .* schichten(:,3)); % [J/(m^2 K)]
 p.C_m       = p.c_area * p.A;                                          % [J/K]
 
+
+%Inital Temperatur (Anahme für Simulink, bitte noch korrigieren @Tom)
+p.Tm0 = 298.15; 
+
 % ---------------------------------------------------------------------
 % 7) Numerik
 % ---------------------------------------------------------------------
