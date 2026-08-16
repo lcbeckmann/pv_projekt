@@ -19,7 +19,7 @@ Nur zuordnen, nicht diskutieren. Widerspruch klärt sich in zwei Minuten.
 | Rolle | Wer |
 |---|---|
 | Parameterrecherche und Parametertabelle |Tom |
-| MATLAB-Kern und Validierung |Linus |
+| MATLAB-Kern und Validierung |Linus R|
 | GeoSphere-Daten, Anwendungsfall, Sensitivität |Matyas|
 | Simulink und Batteriemodell | Lars|
 | Schlusswort über die Protokollstruktur | Lars|

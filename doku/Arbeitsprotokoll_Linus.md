@@ -1,0 +1,303 @@
+# Arbeitsprotokoll Linus (MATLAB-Kern und Validierung)
+
+Laufende Mitschrift der Arbeitsschritte, Aufgabenpunkte 2 und 4.
+Zweck: am Ende in die Protokollkapitel einpflegen, ohne etwas zu rekonstruieren.
+
+Format je Eintrag: Datum, was gemacht wurde, Ergebnis in Stichpunkten, und in
+welches Kapitel es gehoert. Entscheidungen wandern zusaetzlich in
+`annahmen.md`, KI-Nutzung zusaetzlich in Kapitel 10.
+
+---
+
+## 16.08. Bestandsaufnahme MATLAB-Kern
+
+**Gemacht:** Vollstaendige Durchsicht aller 18 Dateien in `matlab/` gegen die
+sechs Modellgleichungen der Angabe.
+
+- Kern ist code-vollstaendig: Gl. (1) in `pv_thermal_ode.m`, Gl. (2) inline,
+  Gl. (3) in `calc_w_el.m`, Gl. (4) in `calc_h_conv.m`, Gl. (5) in
+  `calc_q_rad.m`, Gl. (6) in `init_parameters.m`
+- Coderegeln eingehalten: keine Zahlenwerte ausserhalb `init_parameters.m`,
+  keine Fallunterscheidung in der rechten Seite, jede Datei unter 100 Zeilen
+- `results/` leer: der Kern ist bis heute nie mit echten Daten gelaufen
+- Einzige vorhandene Abbildung `figures/validierung_temperatur.pdf` stammt
+  aus synthetischen Platzhalterdaten und ist nicht verwendbar
+
+→ Kapitel 4.1 (Programmstruktur), Anhang A.1 (Dateiuebersicht)
+
+## 16.08. Ueberschlagsrechnung als Erwartungswert vor dem ersten Lauf
+
+**Gemacht:** Kennzahlen aus den Parametern von Hand ueberschlagen, damit der
+erste Simulationslauf gegen eine Zahl geprueft werden kann und nicht gegen
+das Bauchgefuehl.
+
+- Flaechenbezogene Waermekapazitaet: 7,57 kJ/(m^2 K)
+  (4800 + 1003 + 315 + 1003 + 450 aus dem Schichtstapel)
+- Modulflaeche A = 1,650 x 0,990 = 1,634 m^2
+- **C_m = 12,4 kJ/K**
+- Waermeuebergang bei v = 2 m/s: h = 5,7 + 3,8 x 2 = 13,3 W/(m^2 K),
+  mit A_konv = 3,27 m^2 also 43,5 W/K
+- Strahlung linearisiert: h_rad ~ 4 sigma eps T^3 = 5,3 W/(m^2 K) bei
+  T = 300 K, ueber Vorder- und Rueckseite 17,4 W/K
+- Gesamtleitwert 60,9 W/K → **Zeitkonstante tau = 203 s**
+- Stationaer bei G = 900 W/m^2: Q_solar = 1323 W, W_el = 153 W,
+  → **Delta-T = 19 K** ueber Umgebungstemperatur
+
+**Einordnung:** tau ~ 200 s deckt sich mit der von Herteleer et al. 2023
+genannten Groessenordnung von einigen hundert Sekunden. Delta-T = 19 K passt
+zur erwarteten Groessenordnung 20 bis 30 K bei voller Einstrahlung.
+
+**Wichtig fuer die Sensitivitaetsanalyse:** tau = 203 s liegt deutlich unter
+dem Datenraster von 600 s (10-Minuten-Werte). Damit laesst sich der offene
+Streitpunkt zwischen Tuncel et al. (Stundenwerte, kein Kapazitaetseinfluss)
+und Herteleer et al. (Sekunden bis Minuten noetig) mit einer eigenen Zahl
+beantworten statt nur zitieren.
+
+→ Kapitel 3.3 (Herleitung C_m), Kapitel 4.2 (Zeitkonstante, Solverwahl),
+   Kapitel 7.3 (Einordnung)
+
+## 16.08. Zwei Befunde im Code
+
+**Gemacht:** Code auf Konsistenz mit den getroffenen Entscheidungen geprueft.
+
+- `p.theta` (Neigung 32 Grad) wird in `init_parameters.m` definiert, aber
+  nirgends im Code verwendet. Kein Fehler, sondern Folge der Entscheidung (b)
+  aus der Startsitzung, die Globalstrahlung horizontal direkt zu verwenden.
+  Muss aber als bewusst ungenutzt kommentiert werden, sonst ist es in der
+  Pruefung eine offene Flanke.
+- `plot_validation.m` setzt einen `title()` ueber die Residuenabbildung. Der
+  in der zweiten Sitzung festgelegte Plotstandard verbietet Titel ueber dem
+  Plot. Die Fehlermasse gehoeren in die Bildunterschrift.
+
+→ Kapitel 2.7 (Annahmentabelle, Strahlungsebene), Kapitel 5.2 (Abbildungen)
+
+## 16.08. Erster Lauf der Toolchain (versehentlich mit Platzhalterdaten)
+
+**Gemacht:** `run_all` ausgefuehrt, ohne vorher die Flags umzustellen. Gelaufen
+ist dadurch `run_validation` mit den synthetischen Platzhalterdaten aus
+`load_weather_paper.m`, nicht der Anwendungsfall. Das Ergebnis ist inhaltlich
+nicht verwertbar, aber als Funktionstest der Toolchain aufschlussreich.
+
+- Toolchain laeuft vollstaendig durch: ODE-Loesung, Speichern nach
+  `results/`, Plot, PDF-Export
+- 4033 Zeitschritte fuer 5 simulierte Tage, T_m maximal 46,3 degC bei einer
+  Umgebungstemperatur von maximal 30 degC
+- Solververhalten unauffaellig, glatter Verlauf, keine numerischen Artefakte
+
+**Physikalisch bestaetigt (der eigentliche Ertrag dieses Laufs):** In den
+Nachtstunden liegt T_m sichtbar *unter* T_amb, um rund 2 bis 3 K. Das ist
+kein Fehler, sondern die Strahlungskuehlung gegen den nach Swinbank deutlich
+kaelteren Himmel, und es deckt sich mit dem vorab ueberschlagenen Wert. Damit
+ist `calc_q_rad.m` als Term qualitativ bestaetigt.
+
+**Methodischer Hinweis fuer die Auswertung:** Die Differenz der beiden
+Maxima (46,3 - 30 = 16,3 K) ist *nicht* die Uebertemperatur, weil das
+Einstrahlungsmaximum und das Maximum der Lufttemperatur im Tagesgang zeitlich
+versetzt liegen. Auszuwerten ist immer punktweise, also `max(Tm - Tamb)`.
+
+→ Kapitel 4.1 (Programmstruktur laeuft), Kapitel 6.2 (Strahlungskuehlung),
+   Kapitel 9.1 (Gueltigkeitsbereich)
+
+## 16.08. Abbildungsexport war unbrauchbar, `fig_style.m` korrigiert
+
+**Gemacht:** Das erzeugte `figures/validierung_temperatur.pdf` geprueft.
+
+- Befund: Plotflaeche schwarz, Achsenbeschriftung grau. Ursache ist der Dark
+  Mode von MATLAB, der in die exportierte Vektorgrafik durchschlaegt.
+  `fig_style.m` hat bisher nur die Figure-Farbe auf weiss gesetzt, nicht die
+  Farben von Achsenflaeche, Achsen, Gitter, Text und Legende.
+- Fuer ein gedrucktes Protokoll unbrauchbar, und es haette **jede** Abbildung
+  des Projekts betroffen, nicht nur die eigenen.
+- Behoben in `fig_style.m` durch explizites Setzen der acht betroffenen
+  Default-Farben. Damit ist die Darstellung unabhaengig davon, ob jemand im
+  Team MATLAB im Dark oder im Light Mode betreibt.
+
+**Konsequenz fuer die Gruppe:** Alle bereits erzeugten Abbildungen muessen
+einmal neu exportiert werden. Da Rechnen und Plotten getrennt sind, genuegt
+dafuer der Aufruf der `plot_*`-Skripte, ohne erneute Simulation.
+
+→ Kapitel 4.1 (Trennung Rechnen/Plotten zahlt sich hier konkret aus),
+   Kapitel 10 (KI-Werkzeuge)
+
+## 16.08. Zeitzonenbehandlung der GeoSphere-Daten repariert
+
+**Gemacht:** Zweiter Startversuch von `run_usecase` bricht ab in
+`load_weather_geosphere.m`, Zeile 32.
+
+- Fehlermeldung: enthaelt das Eingabeformat ein Feld fuer den
+  Zeitzonenoffset (`XXX`), verlangt `datetime` zwingend zusaetzlich den
+  Parameter `TimeZone`. Der Aufruf hatte ihn nicht.
+- Zweiter, stiller Fehler in derselben Passage: die Folge
+  `zeit.TimeZone = ''` und danach `zeit.TimeZone = 'UTC+2'` setzt nicht die
+  Darstellung um, sondern verschiebt den physikalischen Zeitpunkt um zwei
+  Stunden. Auf `t` wirkt sich das nicht aus, weil `t` aus Differenzen
+  gebildet wird, wohl aber auf `w.startzeit` und damit auf jede spaetere
+  Achsenbeschriftung mit absoluter Uhrzeit.
+- Behoben: Einlesen explizit als UTC, danach Umstellung auf
+  `Europe/Vienna`. Das aendert nur die Darstellung, nicht den Zeitpunkt, und
+  behandelt die Sommerzeit korrekt (im Juni MESZ, also UTC+2). Der
+  feste Offset `UTC+2` waere fuer Winterdaten falsch gewesen.
+- Zusaetzlich ein `elseif` fuer den Fall, dass `readtable` die Spalte je nach
+  MATLAB-Version bereits als zonenlose `datetime` liefert.
+
+**Hinweis an die Gruppe:** Die Passage stammt aus dem Commit "Behebung
+Zeitzonenkonflikt" und ist auf dieser MATLAB-Version nie gelaufen. Wer Code
+committet, sollte ihn einmal ausgefuehrt haben.
+
+**Noch offen:** Die Entscheidung "rechnen in UTC, darstellen in Ortszeit"
+steht bisher nur in der Sitzungsagenda und muss als Zeile nach
+`annahmen.md`.
+
+→ Kapitel 4.3 (Behandlung der Wetterdaten), Kapitel 6.1 (Datengrundlage)
+
+## 16.08. Abhaengigkeit vom Arbeitsverzeichnis beseitigt
+
+**Gemacht:** Dritter Startversuch bricht ab beim Speichern von
+`results/usecase.mat`, mit der Meldung, der Ordner `results` existiere nicht,
+obwohl er im Repo liegt.
+
+- Ursache: `exist('results','dir')` durchsucht **auch den MATLAB-Suchpfad**.
+  Da `run_all` per `addpath(genpath(pwd))` alle Unterordner in den Pfad legt,
+  meldet die Pruefung den Ordner als vorhanden, das `mkdir` unterbleibt.
+  `save` schreibt dagegen relativ zum Arbeitsverzeichnis, in dem der Ordner
+  nicht liegt. Die Pruefung und der Schreibzugriff beziehen sich also auf
+  zwei verschiedene Orte.
+- Behoben an zwei Stellen:
+  1. `run_all.m` setzt das Arbeitsverzeichnis per
+     `cd(fileparts(mfilename('fullpath')))` auf den eigenen Ordner. Damit ist
+     es gleichgueltig, von wo aus gestartet wird.
+  2. In `run_validation.m`, `run_usecase.m`, `run_sensitivity.m` und
+     `save_figure.m` ersetzt `isfolder` das `exist(...,'dir')`. `isfolder`
+     prueft ausschliesslich relativ zum Arbeitsverzeichnis und kann dadurch
+     nicht faelschlich Erfolg melden.
+
+**Einordnung:** Kein Modellfehler, sondern eine Schwaeche des Geruests. Sie
+haette jeden im Team getroffen, der ein Skript einzeln statt ueber `run_all`
+startet.
+
+→ Kapitel 4.1 (Programmstruktur)
+
+## 16.08. Erster Lauf mit echten Messdaten, Anwendungsfall gerechnet
+
+**Gemacht:** `run_usecase` mit dem GeoSphere-Datensatz der Station Wien Hohe
+Warte, 24.06. bis 01.07.2019, 10-Minuten-Werte, 168 Stunden Simulationszeit.
+Damit ist Aufgabenpunkt 2 erstmals mit echten Zahlen belegt.
+
+**Energieanteile ueber den gesamten Zeitraum:**
+
+| Groesse | Energie [kWh] | Anteil |
+|---|---|---|
+| absorbierte Einstrahlung | 81,64 | 100 % |
+| elektrisch abgefuehrt | 9,73 | 11,9 % |
+| Konvektion | 40,19 | 49,2 % |
+| Strahlung | 31,73 | 38,9 % |
+| Summe der drei Abfluesse | 81,65 | 100,01 % |
+
+**Energiebilanz als Qualitaetsnachweis:** Die Summe der drei Abfluesse
+weicht um 0,01 kWh von der zugefuehrten Energie ab, das sind 0,01 Prozent
+ueber 168 Stunden. Der Rest ist die Differenz des Speicherterms zwischen
+Anfangs- und Endzustand. Damit ist numerisch belegt, dass der Solver ueber
+den gesamten Zeitraum keine Energie verliert oder erzeugt. Das ist ein
+schaerferer Nachweis der numerischen Qualitaet als eine reine
+Toleranzbetrachtung.
+
+**Dominanter Verlustterm (Frage aus Kapitel 6.3): die Konvektion mit
+49 Prozent**, gefolgt von der Strahlung mit 39 Prozent. Elektrisch werden nur
+knapp 12 Prozent der absorbierten Energie abgefuehrt.
+
+**Plausibilitaet des elektrischen Ertrags:** Aus dem Verhaeltnis
+9,73 / 81,64 = 11,9 Prozent folgt mit Gl. (3) eine mittlere, mit der
+Einstrahlung gewichtete Modultemperatur von rund 39 degC. Das ist fuer eine
+Juniwoche in Wien plausibel und bestaetigt die Temperaturrueckkopplung des
+elektrischen Teilmodells.
+
+**Achtung bei der Interpretation:** `energie.solar` ist die *absorbierte*
+Strahlung, also alpha mal G mal A, nicht die einfallende. Die einfallende
+Energie betraegt 81,64 / 0,90 = 90,7 kWh. Wer den Modulwirkungsgrad
+angibt, muss auf die einfallende Groesse beziehen, sonst kommt ein zu
+guenstiger Wert heraus. Bezogen auf die einfallende Strahlung liegt der
+Ertrag bei 10,7 Prozent.
+
+**Nebenbefund:** Die Korrektur an `fig_style.m` wirkt, die drei neuen
+Abbildungen haben weissen Hintergrund und schwarze Beschriftung.
+
+→ Kapitel 6.2 (Ergebnisse), Kapitel 6.3 (dominanter Verlustterm),
+   Kapitel 4.2 (Energiebilanz als numerischer Nachweis)
+
+## 16.08. Tuncel Abb. 1 geprueft: Validierung so nicht durchfuehrbar
+
+**Gemacht:** Das Referenzpaper vollstaendig durchgesehen, um die
+Digitalisierung vorzubereiten.
+
+**Befund, der die geplante Validierung betrifft:** Abb. 1(a) enthaelt
+ausschliesslich die Modultemperatur, gemessen und modelliert, sowie die
+Abweichung zwischen beiden. Sie enthaelt **keine Eingangsgroessen**. Weder
+Einstrahlung noch Umgebungstemperatur noch Windgeschwindigkeit sind in der
+Abbildung oder sonst im Paper als Zahlenwerte veroeffentlicht. Kap. 2.4 nennt
+nur, dass diese Groessen stuendlich an der Wetterstation der GUENAM-Anlage
+gemessen wurden.
+
+`load_weather_paper.m` braucht aber genau G, T_amb und v als Eingang. Aus
+Abb. 1 laesst sich nur die Zielgroesse T_m gewinnen, nicht das, womit man sie
+berechnet. Die Validierung "Paperdaten einlesen, rechnen, mit der Messkurve
+vergleichen" ist mit dem vorliegenden Material nicht durchfuehrbar.
+
+**Was das Paper stattdessen hergibt und was davon sofort verwertbar ist:**
+
+| Groesse | Wert | Verwendung |
+|---|---|---|
+| MAE Modultemperatur gesamt | 0,90 degC | Benchmark |
+| MAE tagsueber | 2,61 degC | Benchmark |
+| MBE tagsueber | -1,64 degC | Modell unterschaetzt |
+| MAE elektrische Leistung | 3,45 W/m^2 | Benchmark |
+| C_m des Referenzmoduls | 5723 J/(m^2 K) | Vergleich zu unseren 7572 |
+| Loesungsverfahren | implizites Euler, 1 h fest | Kontrast zu ode45 |
+| Modul | poly-c-Si, 12,7 %, 0,45 %/K, 32 Grad | bestaetigt `init_parameters.m` |
+
+**Bestehkriterium laesst sich damit begruenden statt raten:** Tuncel et al.
+erreichen mit dem vollen Nusselt-Ansatz und vier Stroemungsregimen tagsueber
+MAE 2,61 degC. Unser Basismodell mit linearer Konvektion kann das
+systematisch nicht unterbieten. Ein Kriterium in der Groessenordnung MAE
+kleiner 5 K ist damit aus der Literatur begruendet und nicht nachtraeglich
+passend gewaehlt.
+
+**Diskussionspunkt fuer Kapitel 7:** Das Paper variiert C_m ueber zwei
+Groessenordnungen (10^2 bis 10^4) und findet praktisch keine Aenderung von
+RMSE und MBE. Schlussfolgerung der Autoren: bei Stundenwerten genuegt eine
+stationaere Rechnung. Unser C_m liegt mit 7572 J/(m^2 K) rund 32 Prozent
+ueber dem Wert des Papers, liegt damit aber immer noch klar innerhalb des
+dort untersuchten Bereichs.
+
+**Ebenfalls bemerkenswert:** In Abb. 2(b) liegt der Speicherterm
+C_m dT/dt sichtbar am kleinsten von allen Bilanztermen. Das deckt sich mit
+unserem eigenen Lauf, in dem der Speicherterm ueber 168 Stunden nur
+0,01 kWh netto ausmacht.
+
+→ Kapitel 5.1 (Bestehkriterium), Kapitel 5.3 (Abweichungen),
+   Kapitel 7.3 (Einordnung), Kapitel 9.2 (Grenzen)
+
+---
+
+## Offen, noch nicht protokolliert
+
+Diese Schritte stehen noch aus. Beim Abarbeiten hier fortschreiben.
+
+- [x] Erster Lauf `run_usecase` mit echten GeoSphere-Daten → erledigt 16.08.
+- [ ] Abgleich gegen die drei Erwartungswerte (C_m, tau, Uebertemperatur),
+      Pruefbefehle stehen aus → Kapitel 4.2 und 6.2
+- [ ] Nachweis der Loesungsunabhaengigkeit: Wiederholung mit RelTol = AbsTol =
+      1e-8, maximale Abweichung in T_m notieren → Kapitel 4.2
+- [ ] Digitalisierte Tuncel-Daten einsetzen, Validierungslauf, Fehlermasse
+      → Kapitel 5.2
+- [ ] Bestehkriterium fuer die Validierung festlegen (Zahl in K, vor dem
+      Ergebnis) → Kapitel 5.1 und `annahmen.md`
+
+---
+
+## Verwendung von KI-Werkzeugen (fuer Kapitel 10)
+
+| Wofuer | Werkzeug | Wie geprueft |
+|---|---|---|
+| Durchsicht des MATLAB-Kerns gegen die Modellgleichungen, Aufspueren des ungenutzten Parameters `theta` und des Plotstandard-Verstosses | Claude (Claude Code) | Beide Befunde im Quelltext an der genannten Stelle nachgesehen und bestaetigt |
+| Ueberschlagsrechnung C_m, tau, stationaeres Delta-T als Erwartungswert vor dem ersten Lauf | Claude (Claude Code) | Von Hand nachgerechnet; Gegenprobe gegen die Simulation steht noch aus |
+| Pruefung des exportierten Abbildungs-PDF, Diagnose des Dark-Mode-Problems und Korrektur von `fig_style.m` | Claude (Claude Code) | PDF vor und nach der Korrektur angesehen, Farbwechsel bestaetigt |

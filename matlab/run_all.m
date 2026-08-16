@@ -9,14 +9,18 @@
 
 clear; close all; clc;
 
+% Alle Pfade im Projekt sind relativ (data/, results/, figures/). MATLAB
+% muss daher im matlab-Ordner stehen, egal von wo run_all gestartet wurde.
+cd(fileparts(mfilename('fullpath')));
+
 addpath(genpath(pwd));
 
-rechnen_validierung   = true;
-rechnen_anwendung     = false;   % braucht data/geosphere_2019.csv
+rechnen_validierung   = false;   % erst sinnvoll mit den Paperdaten aus Tuncel Abb. 1
+rechnen_anwendung     = true;    % braucht data/geosphere_2019.csv
 rechnen_sensitivitaet = false;   % laeuft laenger
 
-plotten_validierung   = true;
-plotten_anwendung     = false;
+plotten_validierung   = false;
+plotten_anwendung     = true;
 plotten_sensitivitaet = false;
 
 if rechnen_validierung,   run_validation;   end

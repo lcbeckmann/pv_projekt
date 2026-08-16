@@ -23,7 +23,7 @@ W_el  = calc_w_el(G, Tm, p);
 Tm_mess = nan(size(t));      % TODO digitalisierte Messwerte einsetzen
 fehler  = calc_errors(Tm, Tm_mess);
 
-if ~exist('results', 'dir'); mkdir('results'); end
+if ~isfolder('results'); mkdir('results'); end
 save(fullfile('results', 'validation.mat'), ...
      't', 'Tm', 'Tamb', 'G', 'W_el', 'Tm_mess', 'fehler', 'p');
 

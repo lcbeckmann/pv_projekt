@@ -31,7 +31,10 @@ energie.el     = trapz(t, W_el);
 energie.konv   = trapz(t, Q_konv);
 energie.rad    = trapz(t, Q_rad);
 
-if ~exist('results', 'dir'); mkdir('results'); end
+% isfolder statt exist(...,'dir'): exist sucht auch im MATLAB-Suchpfad und
+% meldet den Ordner dann als vorhanden, obwohl save relativ zum aktuellen
+% Arbeitsverzeichnis schreibt.
+if ~isfolder('results'); mkdir('results'); end
 save(fullfile('results', 'usecase.mat'), ...
      't', 'Tm', 'Tamb', 'G', 'v', 'W_el', ...
      'Q_solar', 'Q_konv', 'Q_rad', 'Q_speicher', 'energie', 'p', 'w');

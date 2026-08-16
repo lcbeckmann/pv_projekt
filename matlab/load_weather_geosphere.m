@@ -27,12 +27,23 @@ G       = T.cglo;          %  [W/m^2]
 Tamb_C  = T.tl;            %  [degC]
 v       = T.ff;            %  [m/s]
 
-% Zeitachse in sekunden seit Beginn
+% Zeitachse in Sekunden seit Beginn.
+% Die Rohdaten sind in UTC gestempelt, die Zeitstempel enden auf +00:00.
+% Enthaelt das Eingabeformat ein Zonenfeld (XXX), verlangt datetime
+% zwingend die Angabe von 'TimeZone'.
 if ~isdatetime(zeit)
-    zeit = datetime(zeit, 'InputFormat', 'yyyy-MM-dd''T''HH:mmXXX');
-    zeit.TimeZone = '';
-    zeit.TimeZone = 'UTC+2';
+    zeit = datetime(zeit, 'InputFormat', 'yyyy-MM-dd''T''HH:mmXXX', ...
+                          'TimeZone', 'UTC');
+elseif isempty(zeit.TimeZone)
+    zeit.TimeZone = 'UTC';   % readtable hat ohne Zonenangabe eingelesen
 end
+
+% Entscheidung aus der zweiten Sitzung: gerechnet wird in UTC, dargestellt
+% in Ortszeit. Das Umsetzen der TimeZone-Eigenschaft aendert nur die
+% Darstellung, nicht den physikalischen Zeitpunkt. Auf die Rechnung hat es
+% keinen Einfluss, weil t weiter unten aus Differenzen gebildet wird.
+zeit.TimeZone = 'Europe/Vienna';
+
 t = seconds(zeit - zeit(1));
 
 % Luecken behandeln: hier lineare Interpolation, Entscheidung dokumentieren

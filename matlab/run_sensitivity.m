@@ -55,5 +55,5 @@ for k = 1:size(studien, 1)
     fprintf('Sensitivitaet %s fertig.\n', name);
 end
 
-if ~exist('results', 'dir'); mkdir('results'); end
+if ~isfolder('results'); mkdir('results'); end
 save(fullfile('results', 'sensitivity.mat'), 'ergebnis', 'p_nom');

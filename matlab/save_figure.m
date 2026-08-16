@@ -8,7 +8,7 @@ function save_figure(fig, name)
 %   Die Groesse wird hier fest vorgegeben, damit die Schriftgroesse im
 %   fertigen Dokument ueber alle Abbildungen gleich bleibt.
 
-if ~exist('figures', 'dir'); mkdir('figures'); end
+if ~isfolder('figures'); mkdir('figures'); end
 
 breite = 15.0;   % cm, entspricht etwa der Textbreite in A4
 hoehe  =  8.0;   % cm
