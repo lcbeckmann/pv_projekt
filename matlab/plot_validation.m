@@ -23,13 +23,21 @@ legend('Location', 'best');
 save_figure(f1, 'validierung_temperatur');
 
 % --- Abbildung 2: Residuum --------------------------------------------
+% Kein title() ueber dem Plot: die Protokolltipps der LVA verlangen, dass
+% die Kernaussage in der Bildunterschrift steht und sich nicht zwischen
+% Titel, Achsenbeschriftung und Caption wiederholt. Die Fehlermasse werden
+% deshalb auf die Konsole ausgegeben und von dort in die Caption des
+% Protokolls uebernommen.
 if any(~isnan(Tm_mess))
     f2 = figure;
     plot(t_h, Tm - Tm_mess, '-');
     yline(0, 'k--', 'HandleVisibility', 'off');
     xlabel('Zeit in h');
     ylabel('Abweichung in K');
-    title(sprintf('MAE %.2f K, RMSE %.2f K, MBE %.2f K', ...
-                  fehler.MAE, fehler.RMSE, fehler.MBE));
     save_figure(f2, 'validierung_residuum');
+
+    fprintf(['Fuer die Bildunterschrift: MAE %.2f K, RMSE %.2f K, ' ...
+             'MBE %+.2f K (tagsueber: MAE %.2f K, MBE %+.2f K).\n'], ...
+            fehler.MAE, fehler.RMSE, fehler.MBE, ...
+            fehler.tag.MAE, fehler.tag.MBE);
 end

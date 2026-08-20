@@ -276,6 +276,248 @@ unserem eigenen Lauf, in dem der Speicherterm ueber 168 Stunden nur
 → Kapitel 5.1 (Bestehkriterium), Kapitel 5.3 (Abweichungen),
    Kapitel 7.3 (Einordnung), Kapitel 9.2 (Grenzen)
 
+## 16.08. Herkunft aller Annahmen durchgegangen, eine Luecke gefunden
+
+**Gemacht:** Jede Zahl in `init_parameters.m` auf ihre Quelle zurueckverfolgt,
+um sie in der Praesentation verteidigen zu koennen.
+
+**Ergebnis:** Alle Parameter sind belegt, mit **einer** Ausnahme:
+
+    p.A_conv = 2 * p.A    % konvektiv wirksame Flaeche (Vorder- + Rueckseite)
+
+Das ist die einzige nicht abgeleitete Zahl ohne Quellenangabe, und sie ist
+alles andere als harmlos. Die McAdams-Korrelation h = 5,7 + 3,8 v ist fuer
+**eine** ueberstroemte Plattenseite aufgestellt. Indem wir sie auf die
+doppelte Flaeche anwenden, verdoppeln wir den konvektiven Waermeuebergang.
+Genau dieser Term ist im Anwendungsfall mit 49 Prozent der dominante
+Verlustpfad. Die Annahme entscheidet damit spuerbar ueber das Ergebnis.
+
+**Physikalisch vertretbar** ist sie fuer ein freistehend aufgestaendertes
+Modul, das beidseitig umstroemt wird. Fuer ein dach- oder fassadenintegriertes
+Modul waere sie falsch, dort waere A_conv = A anzusetzen. Es handelt sich
+also um eine Annahme ueber die **Einbausituation**, die bisher nirgends
+ausgesprochen ist.
+
+**Zu tun:** Zeile in `annahmen.md` ergaenzen, Kommentar in
+`init_parameters.m` mit Begruendung versehen, und den Fall A_conv = A in die
+Sensitivitaetsanalyse aufnehmen. Letzteres ist billig, weil dort ohnehin
+schon h_b variiert wird, und es beantwortet die Frage quantitativ statt
+argumentativ.
+
+→ Kapitel 2.4 (Konvektion), Kapitel 2.7 (Annahmentabelle),
+   Kapitel 7.2 (Sensitivitaet), Kapitel 9.1 (Gueltigkeitsbereich)
+
+## 16.08. Fehlerdefinition von Tuncel geprueft, Tag-Nacht-Trennung noetig
+
+**Gemacht:** Nachgesehen, wie das Referenzpaper seine Fehlermasse bildet,
+damit unsere Zahlen mit seinen vergleichbar sind.
+
+**Formeln.** Das Paper nennt MAE, RMSE und MBE nur beim Namen und gibt keine
+Gleichungen an. Es sind die Standarddefinitionen, und `calc_errors.m`
+implementiert sie bereits richtig:
+
+    r    = T_sim - T_mess
+    MAE  = mean(|r|)        mittlerer Betrag der Abweichung
+    RMSE = sqrt(mean(r^2))  bestraft grosse Ausreisser staerker
+    MBE  = mean(r)          Vorzeichen zeigt die Richtung
+
+**Vorzeichenkonvention stimmt ueberein.** Tuncel schreibt, das Modell
+unterschaetze die Modultemperatur, und gibt MBE mit -1,64 degC an. Negativ
+bedeutet dort also Unterschaetzung, das entspricht r = sim - mess, genau wie
+in `calc_errors.m`. Damit sind die Vorzeichen direkt vergleichbar.
+
+**Die eigentliche Falle: das Paper gibt zwei verschiedene MAE an.**
+
+| Bezug | MAE |
+|---|---|
+| gesamter Zeitraum | 0,90 degC |
+| nur tagsueber | 2,61 degC |
+
+Der Unterschied betraegt fast den Faktor drei und ist kein Widerspruch:
+nachts liegt das Modul nahe an der Umgebungstemperatur, dort ist wenig
+Dynamik und der Fehler klein. Mittelt man ueber 24 Stunden, verduennen die
+vielen unauffaelligen Nachtwerte die Abweichung der Mittagsstunden.
+
+**Konsequenz fuer unsere Validierung:** Wer den MAE ueber den gesamten
+Zeitraum bildet und ihn mit Tuncels 2,61 degC vergleicht, vergleicht zwei
+verschiedene Dinge und sieht besser aus, als er ist. Wir muessen beide Werte
+getrennt ausweisen, so wie das Paper es tut. `calc_errors.m` kennt bisher
+keine Tag-Nacht-Trennung.
+
+**Zusaetzlich festzulegen:** Das Paper definiert nicht, wo "daytime"
+beginnt. Wir brauchen eine eigene, dokumentierte Schwelle, zum Beispiel
+G groesser 20 W/m^2. Diese Definition gehoert nach `annahmen.md`, weil sie
+die Fehlerzahl spuerbar verschiebt.
+
+→ Kapitel 5.1 (Fehlermasse), Kapitel 5.2 (Ergebnisse)
+
+## 20.08. Fahrplan abgearbeitet: offene Punkte in Code und Protokoll geschlossen
+
+**Gemacht:** Die bis dahin gesammelten offenen Punkte in einem Zug
+abgearbeitet. Betroffen sind acht Dateien.
+
+**Eigener Bereich (MATLAB-Kern und Validierung):**
+
+- `calc_errors.m` um eine Tag-Nacht-Trennung erweitert. Optionales drittes
+  Argument `ist_tag`, zusaetzliche Felder `e.tag` und `e.nacht`. Die
+  Begruendung (Tuncel gibt 0,90 gegen 2,61 degC an) steht im Dateikopf, weil
+  sie sonst in einem halben Jahr niemand mehr rekonstruiert.
+- `run_validation.m`: Fehlermasse werden jetzt getrennt berechnet und
+  ausgegeben. Ausserdem ist der Einbau der Messwerte vorbereitet: liegen in
+  der Wetterstruct die Felder `t_mess` und `Tm_mess`, werden sie auf das
+  Zeitgitter des Loesers interpoliert. Bis dahin bleibt der bisherige
+  Platzhalter aktiv, ohne dass etwas abstuerzt.
+- `plot_validation.m`: `title()` entfernt. Der Plotstandard der LVA verlangt
+  die Kernaussage in der Bildunterschrift und keine Wiederholung zwischen
+  Titel, Achse und Caption. Die Fehlermasse werden stattdessen fertig
+  formatiert auf die Konsole ausgegeben und von dort in die Caption
+  uebernommen.
+- Kapitel 4 (Numerik) als Rohfassung geschrieben. Enthaelt die Begruendung
+  der Solverwahl ueber das nicht definierte Steifheitsverhaeltnis eines
+  skalaren Systems, die Energiebilanz als unabhaengige Kontrolle und die
+  Zeitkonstante. Offen bleibt eine einzige Zahl, die maximale Abweichung aus
+  dem Toleranzvergleich.
+- Kapitel 5.1 (Vorgehen und Fehlermasse) geschrieben, einschliesslich der
+  drei Validierungskriterien der Vorlesung und der Herleitung des
+  Bestehkriteriums aus der Literatur. Abschnitt 5.2 als Datengrundlage
+  angelegt, in dem der Befund zu Abb. 1 festgehalten ist.
+
+**Ausserhalb des eigenen Bereichs, mit dem Team abzustimmen:**
+
+- `init_parameters.m` (Toms Datei): `A_conv` und `theta` mit Begruendung
+  kommentiert, `p.G_tag_min = 20` ergaenzt. Die Zahl musste dorthin, weil
+  die Coderegel keine Zahlenwerte ausserhalb dieser Datei erlaubt.
+- `run_sensitivity.m` (Matyas' Datei): Studie ueber `A_conv` von 1*A bis
+  2*A aufgenommen. Damit wird die einzige nicht durch Literatur belegte
+  Annahme quantitativ statt argumentativ behandelt.
+- `annahmen.md` (gemeinsam): alle Platzhalterdaten gefuellt, Station und
+  Datenluecken eingetragen, vier neue Zeilen ergaenzt, ein Abschnitt
+  "Offene Punkte" mit den vier Gruppenentscheidungen angelegt und zwei
+  verworfene Ansaetze dokumentiert.
+
+**Dabei einen Fehler in der Auswertung der Sensitivitaetsanalyse gefunden.**
+`plot_sensitivity.m` bestimmte den Bezugswert der relativen Darstellung als
+*mittleren* Wert der jeweiligen Reihe. Das trifft nur zu, wenn der
+Nominalwert zufaellig in der Mitte liegt. Bei `eps_front` war das schon
+vorher nicht der Fall (Mitte 0,85, tatsaechlicher Nominalwert 0,87), und die
+neue A_conv-Studie hat ihren Nominalfall am oberen Rand. Die Abbildungen
+haetten die Kurven gegen einen falschen Bezugspunkt normiert. Behoben, indem
+`run_sensitivity.m` den Nominalwert je Studie mitschreibt und
+`plot_sensitivity.m` ihn von dort nimmt.
+
+**Nicht erledigt, weil ohne MATLAB nicht moeglich:** Toleranzvergleich und
+die Pruefbefehle. Beides bleibt in der Liste unten.
+
+→ Kapitel 4 und 5 liegen als Rohfassung vor, Kapitel 7.2 bekommt eine
+   zusaetzliche Studie
+
+## 20.08. Toleranzvergleich gelaufen, Merge-Konflikt aufgeloest
+
+**Toleranzvergleich.** Anwendungsfall ueber 168 h mit RelTol = AbsTol =
+1e-8 wiederholt und gegen die Standardrechnung mit 1e-6 gestellt.
+
+    max |T_m(1e-8) - T_m(1e-6)| = 3,46e-02 K
+
+**Der Wert ist groesser als erwartet, und das ist die eigentliche
+Erkenntnis.** Bei einer Verschaerfung um zwei Groessenordnungen haette man
+eine deutlich kleinere Abweichung vermutet. Die Ursache liegt nicht am
+Loeser, sondern an den Eingangsdaten: `ode45` setzt eine hinreichend glatte
+rechte Seite voraus, die linear interpolierten Wetterdaten sind an jeder
+Stuetzstelle aber nur stetig und nicht stetig differenzierbar. An diesen
+Knicken verliert das Verfahren seine Konvergenzordnung, und bei
+10-Minuten-Werten liegen ueber 168 Stunden mehr als eintausend solcher
+Stellen im Integrationsintervall.
+
+**Bewertung:** unkritisch, aber anders zu begruenden als geplant. Die
+Digitalisierungsunsicherheit von T_m,mess betraegt laut Tom rund +/- 1 K, die
+Modellunsicherheit liegt bei mehreren Kelvin. Der numerische Fehler ist
+damit etwa zwei Groessenordnungen kleiner als der kleinste physikalisch
+bedeutsame Effekt. Im Protokoll steht deshalb nicht "die Loesung ist
+konvergiert", sondern warum sie nicht weiter konvergiert und warum das
+folgenlos bleibt. Kapitel 4.2 ist damit vollstaendig.
+
+**Merge-Konflikt in `run_validation.m`.** Die Datei lag mit den Markern
+`<<<<<<< Updated upstream` und `>>>>>>> Stashed changes` im Repo und war in
+diesem Zustand nicht ausfuehrbar. Der Konflikt war bereits committet
+(ff1e829). Ursache: Tom hat parallel die digitalisierten Messwerte
+eingebaut, waehrend hier die Tag-Nacht-Trennung entstand.
+
+Aufgeloest, indem beide Seiten erhalten bleiben:
+
+- Toms Block mit den 121 digitalisierten Stundenwerten und der
+  Dokumentation des Digitalisierungsverfahrens bleibt unveraendert
+- die Fehlermasse werden weiterhin getrennt fuer Tag und Nacht gebildet
+- der beim Merge verlorengegangene `isfolder`-Fix wurde wieder eingesetzt
+
+**Hinweis zur Nomenklatur:** Tom bezeichnet den gewaehlten Weg in
+`annahmen.md` und `load_weather_paper.m` als "Option B". Gemeint ist die
+Rekonstruktion der Eingangsdaten, die im Fragenkatalog dieses Protokolls
+unter a) gefuehrt wird. Vor der Uebernahme ins Protokoll sollte eine der
+beiden Bezeichnungen vereinheitlicht werden, sonst widersprechen sich die
+Dokumente.
+
+→ Kapitel 4.2 (vollstaendig), Kapitel 5.2
+
+## 20.08. Erster Validierungslauf gegen die digitalisierten Paperdaten
+
+**Gemacht:** `run_validation` mit Toms digitalisierter Messkurve und den
+konstruierten Wettereingangsdaten. 4457 Zeitschritte, T_m maximal 45,4 degC.
+
+| Bezug | MAE | RMSE | MBE | N |
+|---|---|---|---|---|
+| gesamt    | 6,97 K | 9,32 K  | -1,24 K | 4457 |
+| tagsueber | 8,90 K | 10,73 K | -0,55 K | 2982 |
+| nachts    | 3,06 K | 5,46 K  | -2,64 K | 1475 |
+
+**Das Bestehkriterium ist nicht erfuellt.** Der Tages-MAE liegt mit 8,90 K
+deutlich ueber der festgelegten Grenze von 5 K und mehr als dreimal so hoch
+wie der Wert von 2,61 K, den Tuncel et al. mit dem vollen Nusselt-Ansatz
+erreichen. Das Ergebnis wird hier bewusst so festgehalten, statt das
+Kriterium nachtraeglich anzupassen.
+
+**Die Struktur des Fehlers ist aufschlussreicher als sein Betrag:**
+
+- *Tagsueber* ist MAE mit 8,90 K gross, MBE mit -0,55 K aber nahezu null.
+  Die Abweichungen heben sich im Mittel also auf. Das ist typisch fuer einen
+  Phasen- oder Amplitudenfehler der antreibenden Groessen, nicht fuer einen
+  systematischen Modellfehler. Ein zu kaltes oder zu warmes Modell haette
+  einen MBE in der Groessenordnung des MAE.
+- *Nachts* liegen MAE 3,06 K und MBE -2,64 K betragsmaessig nahe beieinander.
+  Hier liegt das Modell also systematisch zu tief, nicht zufaellig daneben.
+
+**Auffaelligste Einzelbeobachtung:** Die digitalisierte Messkurve erreicht
+in der Spitze 327,9 K, also 54,8 degC. Das Modell kommt auf 45,4 degC. Am
+Mittag der klaren Tage fehlen dem Modell somit rund 9,4 K.
+
+**Moegliche Ursachen, mit den vorliegenden Daten nicht trennbar:**
+
+  1. Die Wettereingangsdaten sind konstruiert. Ist die angenommene
+     Einstrahlung zu niedrig, die angenommene Windgeschwindigkeit zu hoch
+     oder die angenommene Umgebungstemperatur zu kalt, entsteht genau dieses
+     Bild. Diese Einschraenkung ist in `load_weather_paper.m` bereits
+     dokumentiert.
+  2. Die Annahme A_conv = 2*A. Setzt man stattdessen A_conv = A, sinkt der
+     Gesamtleitwert von rund 61 auf 39 W/K, ein Faktor von 1,56. Das
+     Verhaeltnis der beobachteten Uebertemperaturen (24,8 K gemessen gegen
+     15,4 K gerechnet) betraegt 1,61. Die Groessenordnung passt damit
+     auffaellig gut, was aber ausdruecklich noch kein Beweis ist.
+
+**Wichtig und im Protokoll festzuhalten:** Aus dieser Uebereinstimmung darf
+nicht gefolgert werden, A_conv sei auf A zu setzen, damit die Kurve passt.
+Das waere eine Kalibrierung und keine Validierung, und sie waere mit
+erfundenen Eingangsdaten doppelt wertlos. Die Sensitivitaetsanalyse zeigt
+den Einfluss quantitativ, die Entscheidung ueber die Einbausituation muss
+physikalisch begruendet bleiben.
+
+**Zu klaeren:** Ob das Bestehkriterium auf diesen Vergleich ueberhaupt
+anwendbar ist. Es wurde fuer eine Validierung gegen gemessene
+Eingangsgroessen formuliert. Bei konstruierten Eingangsdaten misst es
+Modell- und Annahmefehler gemeinsam und ist als Bestehgrenze in dieser Form
+nicht geeignet.
+
+→ Kapitel 5.2 (Ergebnisse), Kapitel 5.3 (Diskussion der Abweichungen),
+   Kapitel 7.2 (A_conv), Kapitel 9.1 (Gueltigkeitsbereich)
+
 ---
 
 ## Offen, noch nicht protokolliert
@@ -285,12 +527,20 @@ Diese Schritte stehen noch aus. Beim Abarbeiten hier fortschreiben.
 - [x] Erster Lauf `run_usecase` mit echten GeoSphere-Daten → erledigt 16.08.
 - [ ] Abgleich gegen die drei Erwartungswerte (C_m, tau, Uebertemperatur),
       Pruefbefehle stehen aus → Kapitel 4.2 und 6.2
-- [ ] Nachweis der Loesungsunabhaengigkeit: Wiederholung mit RelTol = AbsTol =
-      1e-8, maximale Abweichung in T_m notieren → Kapitel 4.2
-- [ ] Digitalisierte Tuncel-Daten einsetzen, Validierungslauf, Fehlermasse
-      → Kapitel 5.2
-- [ ] Bestehkriterium fuer die Validierung festlegen (Zahl in K, vor dem
-      Ergebnis) → Kapitel 5.1 und `annahmen.md`
+- [x] Nachweis der Loesungsunabhaengigkeit erbracht: 3,46e-02 K → erledigt
+      20.08., Kapitel 4.2 ist damit vollstaendig
+- [ ] `run_validation` mit Toms Daten laufen lassen und die Fehlermasse
+      gegen das Bestehkriterium halten → Kapitel 5.2
+- [ ] `run_sensitivity` einmal laufen lassen, jetzt mit der A_conv-Studie
+      → Kapitel 7.2
+- [x] Bestehkriterium formuliert und begruendet (MAE tagsueber unter 5 K)
+      → steht in `annahmen.md`, **muss in der Gruppe bestaetigt werden**
+- [ ] Datengrundlage der Validierung: Gruppenentscheidung zwischen den drei
+      Wegen in `annahmen.md`, offener Punkt 1 → Kapitel 5.2
+- [ ] Bodentemperatur gegen `ts` und `tb10` aus dem GeoSphere-Datensatz
+      pruefen, statt die Annahme nur zu behaupten → Kapitel 9.1
+- [ ] Anfangstemperatur zwischen MATLAB (`T0 = Tamb(0)`) und Simulink
+      (`p.Tm0 = 298.15`) angleichen oder Abweichung begruenden → Kapitel 8.3
 
 ---
 
@@ -301,3 +551,5 @@ Diese Schritte stehen noch aus. Beim Abarbeiten hier fortschreiben.
 | Durchsicht des MATLAB-Kerns gegen die Modellgleichungen, Aufspueren des ungenutzten Parameters `theta` und des Plotstandard-Verstosses | Claude (Claude Code) | Beide Befunde im Quelltext an der genannten Stelle nachgesehen und bestaetigt |
 | Ueberschlagsrechnung C_m, tau, stationaeres Delta-T als Erwartungswert vor dem ersten Lauf | Claude (Claude Code) | Von Hand nachgerechnet; Gegenprobe gegen die Simulation steht noch aus |
 | Pruefung des exportierten Abbildungs-PDF, Diagnose des Dark-Mode-Problems und Korrektur von `fig_style.m` | Claude (Claude Code) | PDF vor und nach der Korrektur angesehen, Farbwechsel bestaetigt |
+| Durchsicht von Tuncel et al. 2020 auf Fehlerdefinition und Datengrundlage der Abb. 1 | Claude (Claude Code) | Abbildung und Kap. 2.4/3 des Papers selbst gelesen; die Aussage, dass keine Eingangsgroessen veroeffentlicht sind, am Original geprueft |
+| Erweiterung von `calc_errors.m`, Rohfassung der Kapitel 4 und 5.1 | Claude (Claude Code) | Formeln gegen die Standarddefinitionen und die Vorzeichenkonvention des Papers geprueft; Text vor Uebernahme durchgearbeitet |

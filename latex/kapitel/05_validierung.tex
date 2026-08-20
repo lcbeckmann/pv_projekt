@@ -1,16 +1,95 @@
 \section{Validierung}
 \label{sec:validierung}
 
-% VERANTWORTLICH: ...
+% VERANTWORTLICH: Linus
 % Aufgabenpunkt 4.
+% ROHFASSUNG. Abschnitt 5.1 steht, 5.2 und 5.3 warten auf die
+% Gruppenentscheidung zur Datengrundlage (siehe doku/annahmen.md,
+% offener Punkt 1).
 
 \subsection{Vorgehen und Fehlermasse}
 
-% Die Vorlesung nennt drei Kriterien fuer Modellvalidierung:
-% Reproduzierbarkeit, Praediktion, innere Struktur. Alle drei kurz auf
-% dieses Modell anwenden, nicht nur Kurven uebereinanderlegen.
-% Die Wahl des Fehlermasses begruenden. MAE, RMSE und MBE liefern
-% unterschiedliche Aussagen, MBE zeigt systematische Abweichung.
+Die Vorlesung nennt drei Kriterien fuer die Validierung eines Modells:
+Reproduzierbarkeit, Praediktion und innere Struktur. Auf das vorliegende
+Modell angewandt bedeutet das:
+
+\begin{itemize}
+  \item \emph{Reproduzierbarkeit.} Bei gleichen Eingangsdaten liefert die
+        Implementierung dasselbe Ergebnis. Da alle Parameter an einer
+        einzigen Stelle liegen und der Loeser deterministisch arbeitet, ist
+        dieses Kriterium konstruktiv erfuellt. Der Nachweis der
+        Loesungsunabhaengigkeit in Abschnitt~\ref{sec:solver} gehoert
+        ebenfalls hierher.
+  \item \emph{Praediktion.} Das Modell muss Messwerte vorhersagen, die
+        nicht in seine Aufstellung eingeflossen sind. Dies ist der Kern
+        dieses Kapitels.
+  \item \emph{Innere Struktur.} Nicht nur das Ergebnis, auch die einzelnen
+        Terme muessen physikalisch sinnvoll sein. Zwei Beobachtungen stuetzen
+        das: In den Nachtstunden liegt die Modultemperatur um zwei bis drei
+        Kelvin \emph{unter} der Lufttemperatur. Das ist kein Rechenfehler,
+        sondern die Abstrahlung gegen den nach Swinbank deutlich kaelteren
+        Himmel, und es bestaetigt den Strahlungsterm unabhaengig vom
+        Gesamtergebnis. Ausserdem schliesst die Energiebilanz ueber eine
+        Woche auf ein Hundertstel Prozent, siehe
+        Abschnitt~\ref{sec:solver}.
+\end{itemize}
+
+\paragraph{Wahl der Fehlermasse.}
+Verwendet werden der mittlere absolute Fehler (MAE), die Wurzel des
+mittleren quadratischen Fehlers (RMSE) und der mittlere systematische Fehler
+(MBE), jeweils in Kelvin. Die drei Masse beantworten verschiedene Fragen:
+der MAE gibt die typische Abweichung an, der RMSE gewichtet einzelne grosse
+Ausreisser staerker, und der MBE zeigt als einziger die \emph{Richtung} der
+Abweichung. Ein Modell kann einen kleinen RMSE aufweisen und trotzdem
+systematisch zu tief liegen; erst der MBE macht das sichtbar. Das Residuum
+ist als $r = T_\mathrm{sim} - T_\mathrm{mess}$ definiert, ein negativer MBE
+bedeutet also eine Unterschaetzung. Diese Konvention entspricht der von
+Tuncel et al.~\cite{tuncel2020}, deren Werte damit unmittelbar
+vergleichbar sind.
+
+\paragraph{Getrennte Auswertung fuer Tag und Nacht.}
+Die Fehlermasse werden zusaetzlich getrennt fuer die Tages- und die
+Nachtstunden angegeben. Der Grund dafuer laesst sich am Referenzpaper selbst
+ablesen: Tuncel et al. berichten fuer denselben Datensatz einen MAE von
+$0{,}90\,\mathrm{K}$ ueber den gesamten Zeitraum, aber $2{,}61\,\mathrm{K}$
+allein fuer die Tagesstunden. Nachts liegt das Modul nahe an der
+Umgebungstemperatur, die Dynamik ist gering und die Abweichung klein. Wer
+ueber volle Tage mittelt, verduennt die Abweichung der Mittagsstunden mit
+vielen unauffaelligen Nachtwerten und erhaelt eine Zahl, die guenstiger
+aussieht, als das Modell ist. Als Grenze gilt eine Globalstrahlung von
+$20\,\mathrm{W/m^2}$; das Referenzpaper definiert die Grenze nicht, die
+Festlegung ist daher in der Annahmentabelle dokumentiert.
+
+\paragraph{Kriterium fuer eine bestandene Validierung.}
+% TODO In der Gruppe bestaetigen, siehe doku/annahmen.md, offener Punkt 2.
+Das Kriterium wurde festgelegt, \emph{bevor} Ergebnisse vorlagen. Wer die
+Schwelle erst nach dem Ergebnis waehlt, waehlt die guenstigste. Als Grenze
+gilt ein MAE der Tagesstunden von $5\,\mathrm{K}$. Dieser Wert ist aus der
+Literatur begruendet: Tuncel et al. erreichen mit dem vollstaendigen
+Nusselt-Ansatz und vier unterschiedenen Stroemungsregimen tagsueber einen MAE
+von $2{,}61\,\mathrm{K}$. Das hier verwendete Basismodell fasst freie und
+erzwungene Konvektion in einem linearen Ansatz zusammen und kann diesen Wert
+systematisch nicht unterbieten. Ein Kriterium in der genannten
+Groessenordnung ist damit sachlich hergeleitet und nicht nachtraeglich
+passend gewaehlt.
+
+\subsection{Datengrundlage}
+\label{sec:validierung_daten}
+
+% TODO Dieser Abschnitt haengt an der Gruppenentscheidung, siehe
+% doku/annahmen.md, offener Punkt 1. Der folgende Absatz haelt den Befund
+% fest, der die urspruengliche Planung hinfaellig gemacht hat.
+
+Als Referenz war Abbildung~1(a) aus Tuncel et al.~\cite{tuncel2020}
+vorgesehen, die gemessene und modellierte Modultemperatur ueber fuenf Tage
+zeigt. Bei der Vorbereitung der Digitalisierung stellte sich heraus, dass
+die Abbildung ausschliesslich die Zielgroesse enthaelt. Globalstrahlung,
+Umgebungstemperatur und Windgeschwindigkeit, also genau die drei
+Eingangsgroessen des Modells, sind weder dort noch an anderer Stelle der
+Arbeit als Zahlenwerte veroeffentlicht; Abschnitt~2.4 der Arbeit haelt nur
+fest, dass sie stuendlich an der Wetterstation der Anlage erfasst wurden.
+Aus der Abbildung laesst sich damit gewinnen, was das Modell vorhersagen
+soll, nicht aber das, womit es rechnet.
 
 \subsection{Ergebnisse}
 
@@ -23,14 +102,16 @@
   \label{fig:validierung}
 \end{figure}
 
+% TODO Zahlen einsetzen, sobald die Datengrundlage geklaert ist.
+% Die Konsolenausgabe von plot_validation.m liefert die Werte fuer die
+% Bildunterschrift bereits fertig formatiert.
+
 \subsection{Diskussion der Abweichungen}
 
-% Die Angabe fragt ausdruecklich, warum es zu Abweichungen kommt.
-% Moegliche Punkte:
-%   - Umgebungstemperatur ist im Paper nicht angegeben und musste
-%     angenommen werden
-%   - vereinfachter Konvektionsansatz
-%   - Stundenwerte glaetten kurzzeitige Bewoelkungswechsel
-%   - Digitalisierungsfehler beim Ablesen der Abbildung
-% Wichtig: nicht entschuldigend formulieren, sondern quantifizieren.
-% Welcher Effekt erklaert wie viel Kelvin?
+% TODO Quantifizieren statt entschuldigen: welcher Effekt erklaert wie viel
+% Kelvin? Zu behandeln sind mindestens:
+%   - fehlende Angaben zu den Eingangsgroessen im Referenzpaper
+%   - linearer Konvektionsansatz statt Nusselt-Ansatz
+%   - Annahme A_conv = 2A ueber die Einbausituation
+%   - ein Temperaturknoten statt Schichtmodell
+%   - Ableseungenauigkeit beim Digitalisieren

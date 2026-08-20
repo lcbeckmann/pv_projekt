@@ -11,9 +11,12 @@ for k = 1:numel(namen)
     name = namen{k};
     d    = ergebnis.(name);
 
-    % relative Aenderung gegenueber dem Nominalfall (mittlerer Wert)
-    i_nom  = ceil(numel(d.werte)/2);
-    x_rel  = d.werte / d.werte(i_nom);
+    % Relative Aenderung gegenueber dem Nominalfall. Der Bezugswert wird aus
+    % dem in run_sensitivity mitgeschriebenen Nominalwert bestimmt, nicht aus
+    % der Mitte der Reihe: bei A_conv liegt der Nominalfall am oberen Rand
+    % (beidseitig umstroemt), bei eps_front zwischen zwei Stuetzstellen.
+    [~, i_nom] = min(abs(d.werte - d.nominal));
+    x_rel      = d.werte / d.nominal;
 
     f = figure;
     yyaxis left;

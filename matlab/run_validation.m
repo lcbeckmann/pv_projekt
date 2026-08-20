@@ -19,9 +19,52 @@ G     = w.G(t);
 Tamb  = w.Tamb(t);
 W_el  = calc_w_el(G, Tm, p);
 
-% Fehlermasse: erst sinnvoll, wenn die Messwerte aus dem Paper vorliegen
-Tm_mess = nan(size(t));      % TODO digitalisierte Messwerte einsetzen
-fehler  = calc_errors(Tm, Tm_mess);
+% ---------------------------------------------------------------------
+% Gemessene Modultemperatur Tm_mess, digitalisiert aus Tuncel et al. 2020,
+% Abb. 1a (blaue Kurve "Tm, measured"). Vorgehen: Seite als Bild
+% gerendert, Achsenkalibrierung über die Pixelposition der Achsenbox
+% bestimmt, Kurve per Farbklassifizierung (Blauton der Messkurve vs.
+% Orangeton der Schaetzkurve, graue Deviation-Balken ausgeschlossen)
+% pixelweise extrahiert und auf ein Stundenraster (0-120 h) gebracht.
+% Genauigkeit: Grafikaufloesung des Papers (~150-300 dpi), Schaetzung
+% +/- 0.5-1 K je Punkt - fuer Fehlermetriken (MAE/RMSE) ausreichend
+% genau, aber KEINE Presiongarantie wie bei Original-Rohdaten.
+% WICHTIG (siehe annahmen.md): Die zugehoerigen Wetter-Eingangsdaten
+% (G, Tamb, v in load_weather_paper.m) sind selbst eine Annahme
+% (Option B) und keine Messung - die Fehlermetrik unten spiegelt daher
+% Modellfehler UND Wetterannahme-Fehler zusammen, nicht trennbar.
+% ---------------------------------------------------------------------
+h_mess = (0:120)';   % Stunden seit Beginn
+Tm_mess_h = [ ...     % [K], digitalisiert aus Abb. 1a, Stundenraster
+    287.21, 287.21, 287.21, 287.21, 287.21, 287.41, 287.80, 287.70, ...
+    287.31, 286.32, 286.77, 291.03, 295.34, 302.59, 309.98, 311.86, ...
+    311.66, 312.46, 311.62, 307.86, 309.87, 303.74, 297.39, 293.50, ...
+    290.42, 288.66, 287.11, 286.32, 285.72, 284.93, 284.14, 284.04, ...
+    284.66, 290.12, 299.70, 309.57, 317.83, 319.29, 317.88, 316.03, ...
+    314.04, 317.78, 314.90, 307.34, 301.64, 295.43, 293.50, 291.43, ...
+    289.57, 288.20, 286.81, 286.66, 286.22, 285.23, 285.73, 288.96, ...
+    299.33, 311.11, 317.34, 324.01, 327.06, 327.17, 325.70, 320.05, ...
+    315.26, 308.78, 301.38, 296.61, 294.18, 293.15, 292.64, 290.10, ...
+    289.13, 286.45, 285.72, 285.13, 285.79, 290.69, 298.58, 310.16, ...
+    316.25, 321.45, 323.84, 322.41, 321.95, 318.79, 313.64, 308.36, ...
+    302.91, 299.36, 296.49, 295.32, 292.98, 291.88, 289.58, 289.23, ...
+    288.06, 286.84, 287.12, 289.98, 300.36, 313.54, 319.42, 327.07, ...
+    327.90, 327.20, 326.32, 322.22, 316.34, 310.85, 305.29, 300.46, ...
+    297.38, 296.32, 294.32, 293.74, 293.74, 293.74, 293.74, 293.74, ...
+    293.74 ]';
+
+% Der Loeser waehlt seine Zeitpunkte adaptiv, die digitalisierten Punkte
+% liegen dagegen auf vollen Stunden. Verglichen wird an den Zeitpunkten,
+% die der Loeser ohnehin geliefert hat.
+Tm_mess = interp1(h_mess*3600, Tm_mess_h, t, 'linear', 'extrap');
+
+% Fehlermasse getrennt fuer Tag und Nacht, siehe calc_errors.m.
+% Tuncel et al. geben MAE 0.90 degC ueber den gesamten Zeitraum an, aber
+% 2.61 degC allein fuer die Tagesstunden. Ein Vergleich nur ueber den
+% Gesamtzeitraum verduennt die Mittagsabweichung mit unauffaelligen
+% Nachtwerten und waere nicht aussagekraeftig.
+ist_tag = G > p.G_tag_min;
+fehler  = calc_errors(Tm, Tm_mess, ist_tag);
 
 if ~isfolder('results'); mkdir('results'); end
 save(fullfile('results', 'validation.mat'), ...
@@ -29,3 +72,14 @@ save(fullfile('results', 'validation.mat'), ...
 
 fprintf('run_validation fertig. %d Zeitschritte, Tm_max = %.1f degC\n', ...
         numel(t), max(Tm) - 273.15);
+
+if fehler.N > 0
+    fprintf('  gesamt   MAE %.2f K | RMSE %.2f K | MBE %+.2f K | N = %d\n', ...
+            fehler.MAE, fehler.RMSE, fehler.MBE, fehler.N);
+    fprintf('  tagsueber MAE %.2f K | RMSE %.2f K | MBE %+.2f K | N = %d\n', ...
+            fehler.tag.MAE, fehler.tag.RMSE, fehler.tag.MBE, fehler.tag.N);
+    fprintf('  nachts   MAE %.2f K | RMSE %.2f K | MBE %+.2f K | N = %d\n', ...
+            fehler.nacht.MAE, fehler.nacht.RMSE, fehler.nacht.MBE, fehler.nacht.N);
+else
+    fprintf('  Keine Messwerte hinterlegt, Fehlermasse noch nicht berechenbar.\n');
+end

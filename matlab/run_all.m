@@ -17,11 +17,11 @@ addpath(genpath(pwd));
 
 rechnen_validierung   = false;   % erst sinnvoll mit den Paperdaten aus Tuncel Abb. 1
 rechnen_anwendung     = true;    % braucht data/geosphere_2019.csv
-rechnen_sensitivitaet = false;   % laeuft laenger
+rechnen_sensitivitaet = true;   % laeuft laenger
 
 plotten_validierung   = false;
-plotten_anwendung     = true;
-plotten_sensitivitaet = false;
+plotten_anwendung     = false;
+plotten_sensitivitaet = true;
 
 if rechnen_validierung,   run_validation;   end
 if rechnen_anwendung,     run_usecase;      end
