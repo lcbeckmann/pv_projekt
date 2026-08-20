@@ -276,6 +276,81 @@ unserem eigenen Lauf, in dem der Speicherterm ueber 168 Stunden nur
 → Kapitel 5.1 (Bestehkriterium), Kapitel 5.3 (Abweichungen),
    Kapitel 7.3 (Einordnung), Kapitel 9.2 (Grenzen)
 
+## 16.08. Herkunft aller Annahmen durchgegangen, eine Luecke gefunden
+
+**Gemacht:** Jede Zahl in `init_parameters.m` auf ihre Quelle zurueckverfolgt,
+um sie in der Praesentation verteidigen zu koennen.
+
+**Ergebnis:** Alle Parameter sind belegt, mit **einer** Ausnahme:
+
+    p.A_conv = 2 * p.A    % konvektiv wirksame Flaeche (Vorder- + Rueckseite)
+
+Das ist die einzige nicht abgeleitete Zahl ohne Quellenangabe, und sie ist
+alles andere als harmlos. Die McAdams-Korrelation h = 5,7 + 3,8 v ist fuer
+**eine** ueberstroemte Plattenseite aufgestellt. Indem wir sie auf die
+doppelte Flaeche anwenden, verdoppeln wir den konvektiven Waermeuebergang.
+Genau dieser Term ist im Anwendungsfall mit 49 Prozent der dominante
+Verlustpfad. Die Annahme entscheidet damit spuerbar ueber das Ergebnis.
+
+**Physikalisch vertretbar** ist sie fuer ein freistehend aufgestaendertes
+Modul, das beidseitig umstroemt wird. Fuer ein dach- oder fassadenintegriertes
+Modul waere sie falsch, dort waere A_conv = A anzusetzen. Es handelt sich
+also um eine Annahme ueber die **Einbausituation**, die bisher nirgends
+ausgesprochen ist.
+
+**Zu tun:** Zeile in `annahmen.md` ergaenzen, Kommentar in
+`init_parameters.m` mit Begruendung versehen, und den Fall A_conv = A in die
+Sensitivitaetsanalyse aufnehmen. Letzteres ist billig, weil dort ohnehin
+schon h_b variiert wird, und es beantwortet die Frage quantitativ statt
+argumentativ.
+
+→ Kapitel 2.4 (Konvektion), Kapitel 2.7 (Annahmentabelle),
+   Kapitel 7.2 (Sensitivitaet), Kapitel 9.1 (Gueltigkeitsbereich)
+
+## 16.08. Fehlerdefinition von Tuncel geprueft, Tag-Nacht-Trennung noetig
+
+**Gemacht:** Nachgesehen, wie das Referenzpaper seine Fehlermasse bildet,
+damit unsere Zahlen mit seinen vergleichbar sind.
+
+**Formeln.** Das Paper nennt MAE, RMSE und MBE nur beim Namen und gibt keine
+Gleichungen an. Es sind die Standarddefinitionen, und `calc_errors.m`
+implementiert sie bereits richtig:
+
+    r    = T_sim - T_mess
+    MAE  = mean(|r|)        mittlerer Betrag der Abweichung
+    RMSE = sqrt(mean(r^2))  bestraft grosse Ausreisser staerker
+    MBE  = mean(r)          Vorzeichen zeigt die Richtung
+
+**Vorzeichenkonvention stimmt ueberein.** Tuncel schreibt, das Modell
+unterschaetze die Modultemperatur, und gibt MBE mit -1,64 degC an. Negativ
+bedeutet dort also Unterschaetzung, das entspricht r = sim - mess, genau wie
+in `calc_errors.m`. Damit sind die Vorzeichen direkt vergleichbar.
+
+**Die eigentliche Falle: das Paper gibt zwei verschiedene MAE an.**
+
+| Bezug | MAE |
+|---|---|
+| gesamter Zeitraum | 0,90 degC |
+| nur tagsueber | 2,61 degC |
+
+Der Unterschied betraegt fast den Faktor drei und ist kein Widerspruch:
+nachts liegt das Modul nahe an der Umgebungstemperatur, dort ist wenig
+Dynamik und der Fehler klein. Mittelt man ueber 24 Stunden, verduennen die
+vielen unauffaelligen Nachtwerte die Abweichung der Mittagsstunden.
+
+**Konsequenz fuer unsere Validierung:** Wer den MAE ueber den gesamten
+Zeitraum bildet und ihn mit Tuncels 2,61 degC vergleicht, vergleicht zwei
+verschiedene Dinge und sieht besser aus, als er ist. Wir muessen beide Werte
+getrennt ausweisen, so wie das Paper es tut. `calc_errors.m` kennt bisher
+keine Tag-Nacht-Trennung.
+
+**Zusaetzlich festzulegen:** Das Paper definiert nicht, wo "daytime"
+beginnt. Wir brauchen eine eigene, dokumentierte Schwelle, zum Beispiel
+G groesser 20 W/m^2. Diese Definition gehoert nach `annahmen.md`, weil sie
+die Fehlerzahl spuerbar verschiebt.
+
+→ Kapitel 5.1 (Fehlermasse), Kapitel 5.2 (Ergebnisse)
+
 ---
 
 ## Offen, noch nicht protokolliert
