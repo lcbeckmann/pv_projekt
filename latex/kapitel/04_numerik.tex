@@ -52,13 +52,29 @@ Toleranz bezieht sich auf die Temperatur in Kelvin; bei Werten um
 $300\,\mathrm{K}$ ist die relative Toleranz die bindende Groesse.
 
 \paragraph{Nachweis der Loesungsunabhaengigkeit.}
-% TODO Zahlen aus dem Toleranzvergleich einsetzen (run_usecase mit
-% RelTol = AbsTol = 1e-8 wiederholen, max. Abweichung in Tm bilden).
-Um zu zeigen, dass die Loesung nicht mehr von der Schrittweitensteuerung
-abhaengt, wurde der Anwendungsfall mit verschaerften Toleranzen von
-$10^{-8}$ wiederholt und mit dem Ergebnis der Standardrechnung verglichen.
-Die maximale Abweichung der Modultemperatur betraegt TODO\,K und liegt damit
-weit unterhalb jeder physikalisch bedeutsamen Groesse.
+Um zu pruefen, ob die Loesung noch von der Schrittweitensteuerung abhaengt,
+wurde der Anwendungsfall ueber $168\,\mathrm{h}$ mit verschaerften Toleranzen
+von $10^{-8}$ wiederholt und mit der Standardrechnung verglichen. Die
+maximale Abweichung der Modultemperatur betraegt
+$3{,}5 \cdot 10^{-2}\,\mathrm{K}$.
+
+Dieser Wert faellt groesser aus, als es die Verschaerfung um zwei
+Groessenordnungen erwarten laesst, und das hat einen inhaltlichen Grund. Die
+Schrittweitensteuerung von \texttt{ode45} setzt eine hinreichend glatte
+rechte Seite voraus. Die Wetterdaten werden jedoch linear interpoliert, die
+rechte Seite ist an jeder Stuetzstelle also nur stetig, nicht stetig
+differenzierbar. An diesen Knicken verliert das Verfahren seine
+Konvergenzordnung, und bei einem Messraster von zehn Minuten liegen ueber
+den Simulationszeitraum mehr als eintausend solcher Stellen. Die verbleibende
+Abweichung ist damit nicht durch die Toleranz begrenzt, sondern durch die
+Beschaffenheit der Eingangsdaten.
+
+Fuer die Aussagekraft des Modells ist das ohne Belang: Die Unsicherheit der
+digitalisierten Referenzwerte liegt bei etwa $\pm 1\,\mathrm{K}$
+(Abschnitt~\ref{sec:validierung_daten}), die Modellunsicherheit selbst im
+Bereich mehrerer Kelvin. Der numerische Fehler ist also rund zwei
+Groessenordnungen kleiner als der kleinste physikalisch bedeutsame Effekt und
+kann bei der Interpretation der Ergebnisse vernachlaessigt werden.
 
 \paragraph{Energiebilanz als unabhaengige Kontrolle.}
 Ein schaerferes Kriterium als der reine Toleranzvergleich ist die Frage, ob

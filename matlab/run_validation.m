@@ -19,7 +19,6 @@ G     = w.G(t);
 Tamb  = w.Tamb(t);
 W_el  = calc_w_el(G, Tm, p);
 
-<<<<<<< Updated upstream
 % ---------------------------------------------------------------------
 % Gemessene Modultemperatur Tm_mess, digitalisiert aus Tuncel et al. 2020,
 % Abb. 1a (blaue Kurve "Tm, measured"). Vorgehen: Seite als Bild
@@ -54,27 +53,20 @@ Tm_mess_h = [ ...     % [K], digitalisiert aus Abb. 1a, Stundenraster
     297.38, 296.32, 294.32, 293.74, 293.74, 293.74, 293.74, 293.74, ...
     293.74 ]';
 
+% Der Loeser waehlt seine Zeitpunkte adaptiv, die digitalisierten Punkte
+% liegen dagegen auf vollen Stunden. Verglichen wird an den Zeitpunkten,
+% die der Loeser ohnehin geliefert hat.
 Tm_mess = interp1(h_mess*3600, Tm_mess_h, t, 'linear', 'extrap');
-fehler  = calc_errors(Tm, Tm_mess);
-=======
-% Messwerte auf das Zeitgitter des Solvers bringen.
-% Der Solver waehlt seine Schritte adaptiv, die digitalisierten Punkte aus
-% dem Paper liegen dagegen auf vollen Stunden. Verglichen wird deshalb an
-% den Zeitpunkten, die der Solver ohnehin geliefert hat.
-if isfield(w, 't_mess') && isfield(w, 'Tm_mess')
-    Tm_mess = interp1(w.t_mess, w.Tm_mess, t, 'linear', NaN);
-else
-    Tm_mess = nan(size(t));   % noch keine Messwerte hinterlegt
-end
 
 % Fehlermasse getrennt fuer Tag und Nacht, siehe calc_errors.m.
-% Tuncel et al. geben beide Werte an, ein Vergleich nur ueber den
-% Gesamtzeitraum waere nicht aussagekraeftig.
+% Tuncel et al. geben MAE 0.90 degC ueber den gesamten Zeitraum an, aber
+% 2.61 degC allein fuer die Tagesstunden. Ein Vergleich nur ueber den
+% Gesamtzeitraum verduennt die Mittagsabweichung mit unauffaelligen
+% Nachtwerten und waere nicht aussagekraeftig.
 ist_tag = G > p.G_tag_min;
 fehler  = calc_errors(Tm, Tm_mess, ist_tag);
->>>>>>> Stashed changes
 
-if ~exist('results', 'dir'); mkdir('results'); end
+if ~isfolder('results'); mkdir('results'); end
 save(fullfile('results', 'validation.mat'), ...
      't', 'Tm', 'Tamb', 'G', 'W_el', 'Tm_mess', 'fehler', 'p');
 

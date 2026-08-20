@@ -411,6 +411,113 @@ die Pruefbefehle. Beides bleibt in der Liste unten.
 → Kapitel 4 und 5 liegen als Rohfassung vor, Kapitel 7.2 bekommt eine
    zusaetzliche Studie
 
+## 20.08. Toleranzvergleich gelaufen, Merge-Konflikt aufgeloest
+
+**Toleranzvergleich.** Anwendungsfall ueber 168 h mit RelTol = AbsTol =
+1e-8 wiederholt und gegen die Standardrechnung mit 1e-6 gestellt.
+
+    max |T_m(1e-8) - T_m(1e-6)| = 3,46e-02 K
+
+**Der Wert ist groesser als erwartet, und das ist die eigentliche
+Erkenntnis.** Bei einer Verschaerfung um zwei Groessenordnungen haette man
+eine deutlich kleinere Abweichung vermutet. Die Ursache liegt nicht am
+Loeser, sondern an den Eingangsdaten: `ode45` setzt eine hinreichend glatte
+rechte Seite voraus, die linear interpolierten Wetterdaten sind an jeder
+Stuetzstelle aber nur stetig und nicht stetig differenzierbar. An diesen
+Knicken verliert das Verfahren seine Konvergenzordnung, und bei
+10-Minuten-Werten liegen ueber 168 Stunden mehr als eintausend solcher
+Stellen im Integrationsintervall.
+
+**Bewertung:** unkritisch, aber anders zu begruenden als geplant. Die
+Digitalisierungsunsicherheit von T_m,mess betraegt laut Tom rund +/- 1 K, die
+Modellunsicherheit liegt bei mehreren Kelvin. Der numerische Fehler ist
+damit etwa zwei Groessenordnungen kleiner als der kleinste physikalisch
+bedeutsame Effekt. Im Protokoll steht deshalb nicht "die Loesung ist
+konvergiert", sondern warum sie nicht weiter konvergiert und warum das
+folgenlos bleibt. Kapitel 4.2 ist damit vollstaendig.
+
+**Merge-Konflikt in `run_validation.m`.** Die Datei lag mit den Markern
+`<<<<<<< Updated upstream` und `>>>>>>> Stashed changes` im Repo und war in
+diesem Zustand nicht ausfuehrbar. Der Konflikt war bereits committet
+(ff1e829). Ursache: Tom hat parallel die digitalisierten Messwerte
+eingebaut, waehrend hier die Tag-Nacht-Trennung entstand.
+
+Aufgeloest, indem beide Seiten erhalten bleiben:
+
+- Toms Block mit den 121 digitalisierten Stundenwerten und der
+  Dokumentation des Digitalisierungsverfahrens bleibt unveraendert
+- die Fehlermasse werden weiterhin getrennt fuer Tag und Nacht gebildet
+- der beim Merge verlorengegangene `isfolder`-Fix wurde wieder eingesetzt
+
+**Hinweis zur Nomenklatur:** Tom bezeichnet den gewaehlten Weg in
+`annahmen.md` und `load_weather_paper.m` als "Option B". Gemeint ist die
+Rekonstruktion der Eingangsdaten, die im Fragenkatalog dieses Protokolls
+unter a) gefuehrt wird. Vor der Uebernahme ins Protokoll sollte eine der
+beiden Bezeichnungen vereinheitlicht werden, sonst widersprechen sich die
+Dokumente.
+
+→ Kapitel 4.2 (vollstaendig), Kapitel 5.2
+
+## 20.08. Erster Validierungslauf gegen die digitalisierten Paperdaten
+
+**Gemacht:** `run_validation` mit Toms digitalisierter Messkurve und den
+konstruierten Wettereingangsdaten. 4457 Zeitschritte, T_m maximal 45,4 degC.
+
+| Bezug | MAE | RMSE | MBE | N |
+|---|---|---|---|---|
+| gesamt    | 6,97 K | 9,32 K  | -1,24 K | 4457 |
+| tagsueber | 8,90 K | 10,73 K | -0,55 K | 2982 |
+| nachts    | 3,06 K | 5,46 K  | -2,64 K | 1475 |
+
+**Das Bestehkriterium ist nicht erfuellt.** Der Tages-MAE liegt mit 8,90 K
+deutlich ueber der festgelegten Grenze von 5 K und mehr als dreimal so hoch
+wie der Wert von 2,61 K, den Tuncel et al. mit dem vollen Nusselt-Ansatz
+erreichen. Das Ergebnis wird hier bewusst so festgehalten, statt das
+Kriterium nachtraeglich anzupassen.
+
+**Die Struktur des Fehlers ist aufschlussreicher als sein Betrag:**
+
+- *Tagsueber* ist MAE mit 8,90 K gross, MBE mit -0,55 K aber nahezu null.
+  Die Abweichungen heben sich im Mittel also auf. Das ist typisch fuer einen
+  Phasen- oder Amplitudenfehler der antreibenden Groessen, nicht fuer einen
+  systematischen Modellfehler. Ein zu kaltes oder zu warmes Modell haette
+  einen MBE in der Groessenordnung des MAE.
+- *Nachts* liegen MAE 3,06 K und MBE -2,64 K betragsmaessig nahe beieinander.
+  Hier liegt das Modell also systematisch zu tief, nicht zufaellig daneben.
+
+**Auffaelligste Einzelbeobachtung:** Die digitalisierte Messkurve erreicht
+in der Spitze 327,9 K, also 54,8 degC. Das Modell kommt auf 45,4 degC. Am
+Mittag der klaren Tage fehlen dem Modell somit rund 9,4 K.
+
+**Moegliche Ursachen, mit den vorliegenden Daten nicht trennbar:**
+
+  1. Die Wettereingangsdaten sind konstruiert. Ist die angenommene
+     Einstrahlung zu niedrig, die angenommene Windgeschwindigkeit zu hoch
+     oder die angenommene Umgebungstemperatur zu kalt, entsteht genau dieses
+     Bild. Diese Einschraenkung ist in `load_weather_paper.m` bereits
+     dokumentiert.
+  2. Die Annahme A_conv = 2*A. Setzt man stattdessen A_conv = A, sinkt der
+     Gesamtleitwert von rund 61 auf 39 W/K, ein Faktor von 1,56. Das
+     Verhaeltnis der beobachteten Uebertemperaturen (24,8 K gemessen gegen
+     15,4 K gerechnet) betraegt 1,61. Die Groessenordnung passt damit
+     auffaellig gut, was aber ausdruecklich noch kein Beweis ist.
+
+**Wichtig und im Protokoll festzuhalten:** Aus dieser Uebereinstimmung darf
+nicht gefolgert werden, A_conv sei auf A zu setzen, damit die Kurve passt.
+Das waere eine Kalibrierung und keine Validierung, und sie waere mit
+erfundenen Eingangsdaten doppelt wertlos. Die Sensitivitaetsanalyse zeigt
+den Einfluss quantitativ, die Entscheidung ueber die Einbausituation muss
+physikalisch begruendet bleiben.
+
+**Zu klaeren:** Ob das Bestehkriterium auf diesen Vergleich ueberhaupt
+anwendbar ist. Es wurde fuer eine Validierung gegen gemessene
+Eingangsgroessen formuliert. Bei konstruierten Eingangsdaten misst es
+Modell- und Annahmefehler gemeinsam und ist als Bestehgrenze in dieser Form
+nicht geeignet.
+
+→ Kapitel 5.2 (Ergebnisse), Kapitel 5.3 (Diskussion der Abweichungen),
+   Kapitel 7.2 (A_conv), Kapitel 9.1 (Gueltigkeitsbereich)
+
 ---
 
 ## Offen, noch nicht protokolliert
@@ -420,9 +527,10 @@ Diese Schritte stehen noch aus. Beim Abarbeiten hier fortschreiben.
 - [x] Erster Lauf `run_usecase` mit echten GeoSphere-Daten → erledigt 16.08.
 - [ ] Abgleich gegen die drei Erwartungswerte (C_m, tau, Uebertemperatur),
       Pruefbefehle stehen aus → Kapitel 4.2 und 6.2
-- [ ] Nachweis der Loesungsunabhaengigkeit: Wiederholung mit RelTol = AbsTol =
-      1e-8, maximale Abweichung in T_m notieren → Kapitel 4.2, dort ist die
-      Zahl das einzige verbliebene TODO
+- [x] Nachweis der Loesungsunabhaengigkeit erbracht: 3,46e-02 K → erledigt
+      20.08., Kapitel 4.2 ist damit vollstaendig
+- [ ] `run_validation` mit Toms Daten laufen lassen und die Fehlermasse
+      gegen das Bestehkriterium halten → Kapitel 5.2
 - [ ] `run_sensitivity` einmal laufen lassen, jetzt mit der A_conv-Studie
       → Kapitel 7.2
 - [x] Bestehkriterium formuliert und begruendet (MAE tagsueber unter 5 K)
