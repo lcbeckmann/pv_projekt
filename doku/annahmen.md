@@ -25,6 +25,7 @@ Format: Datum | Entscheidung | Begruendung | Wer
 | TT.MM. | Glasdichte im Schichtstapel: 3000 statt urspruenglich 2500 kg/m^3 | Herteleer et al. 2023, Tab. 1 gibt fuer gehaertetes Solarglas 3000 kg/m^3 an, nicht Standard-Floatglas 2500 kg/m^3 | Tom |
 | TT.MM. | Rahmen und Luftfilme nicht in C_m (Schichtstapel nur Glas-EVA-Zelle-EVA-Backsheet) | Bilanzraum ist "Modul ohne Rahmen" (Kap. 2, KI_Kontext.md); Herteleer-Tabelle enthaelt Rahmen/Luftfilm-Zeilen zusaetzlich, die wir bewusst weglassen | Tom |
 | TT.MM. | Wetter-Eingangsdaten (G, T_amb, Wind) fuer die Tuncel-Validierung als synthetische Annahme konstruiert (Option B) statt aus Abb. 1 digitalisiert | Tuncel et al. 2020 veroeffentlicht nur Tm/Welec-Kurven, keine Rohwetterdaten und keinen offenen Datensatz; G folgt Tagesbeschreibung aus Kap. 3 (2 Tage bewoelkt, 3 Tage klar), T_amb und Wind sind reine Annahmen (keine Angabe im Paper). Konsequenz: Fehlermetrik in run_validation.m spiegelt Modell- UND Wetterannahmefehler, nicht trennbar - im Protokoll explizit diskutieren | Tom |
+| TT.MM. | Tm_mess in run_validation.m per Pixel-Digitalisierung aus Tuncel Abb. 1a (blaue Messkurve) gewonnen, stuendlich, Genauigkeit ca. +/-0.5-1 K | Seite als Bild gerendert, Achsen ueber Pixelposition der Achsenbox kalibriert, Kurve per Farbklassifizierung (blau vs. orange vs. graue Deviation-Balken) extrahiert; Ergebnis stimmt mit visuellem Eindruck der Tagesspitzen ueberein (Tag 1/2 niedriger = bewoelkt, Tag 3/5 hoeher = klar, konsistent mit Kap. 3) | Tom |
 | | | | |
 
 ---
