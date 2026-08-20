@@ -24,6 +24,7 @@ Format: Datum | Entscheidung | Begruendung | Wer
 | TT.MM. | h_a = 5.7, h_b = 3.8 W/(m^2 K)/(m/s) | McAdams-Korrelation nach Duffie & Beckman 1991/2013, referenziert in Skoplaki & Palyvos 2009 | Tom |
 | TT.MM. | Glasdichte im Schichtstapel: 3000 statt urspruenglich 2500 kg/m^3 | Herteleer et al. 2023, Tab. 1 gibt fuer gehaertetes Solarglas 3000 kg/m^3 an, nicht Standard-Floatglas 2500 kg/m^3 | Tom |
 | TT.MM. | Rahmen und Luftfilme nicht in C_m (Schichtstapel nur Glas-EVA-Zelle-EVA-Backsheet) | Bilanzraum ist "Modul ohne Rahmen" (Kap. 2, KI_Kontext.md); Herteleer-Tabelle enthaelt Rahmen/Luftfilm-Zeilen zusaetzlich, die wir bewusst weglassen | Tom |
+| TT.MM. | Wetter-Eingangsdaten (G, T_amb, Wind) fuer die Tuncel-Validierung als synthetische Annahme konstruiert (Option B) statt aus Abb. 1 digitalisiert | Tuncel et al. 2020 veroeffentlicht nur Tm/Welec-Kurven, keine Rohwetterdaten und keinen offenen Datensatz; G folgt Tagesbeschreibung aus Kap. 3 (2 Tage bewoelkt, 3 Tage klar), T_amb und Wind sind reine Annahmen (keine Angabe im Paper). Konsequenz: Fehlermetrik in run_validation.m spiegelt Modell- UND Wetterannahmefehler, nicht trennbar - im Protokoll explizit diskutieren | Tom |
 | | | | |
 
 ---
