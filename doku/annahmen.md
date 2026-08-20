@@ -9,15 +9,21 @@ Format: Datum | Entscheidung | Begruendung | Wer
 
 | Datum | Entscheidung | Begruendung | Wer |
 |---|---|---|---|
-| TT.MM. | Basismodell statt Nusselt-Ansatz fuer die Konvektion | Windrichtung nicht nutzbar, Regime nicht validierbar | alle |
-| TT.MM. | Modul als ein Temperaturknoten (Lumped) | Laminatdicke ca. 3 mm, Biot-Zahl klein | alle |
-| TT.MM. | Bodentemperatur = Umgebungstemperatur | keine Messdaten verfuegbar | alle |
-| TT.MM. | Himmelstemperatur nach Swinbank | einfachste belegte Korrelation, nur T_amb noetig | |
-| TT.MM. | ode45 mit RelTol = AbsTol = 1e-6 | skalares System, nicht steif | |
-| TT.MM. | lineare Interpolation der Wetterdaten | Spline kann bei Bewoelkungsspruengen ueberschwingen | |
-| TT.MM. | Umgebungstemperatur fuer die Validierung: ... degC | Paper macht keine Angabe | |
-| TT.MM. | GeoSphere-Station: ... | | |
-| TT.MM. | Umgang mit Datenluecken: ... | | |
+| 10.08. | Basismodell statt Nusselt-Ansatz fuer die Konvektion | Windrichtung nicht nutzbar, Regime nicht validierbar | alle |
+| 10.08. | Modul als ein Temperaturknoten (Lumped) | Laminatdicke ca. 3 mm, Biot-Zahl klein | alle |
+| 10.08. | Bodentemperatur = Umgebungstemperatur | keine Messdaten verfuegbar | alle |
+| 10.08. | Himmelstemperatur nach Swinbank | einfachste belegte Korrelation, nur T_amb noetig | alle |
+| 10.08. | ode45 mit RelTol = AbsTol = 1e-6 | skalares System, nicht steif | Linus |
+| 10.08. | lineare Interpolation der Wetterdaten | Spline kann bei Bewoelkungsspruengen ueberschwingen | Linus |
+| 10.08. | Globalstrahlung horizontal, keine Umrechnung auf Modulebene | GeoSphere liefert horizontal; Transposition waere zusaetzliche Modellannahme ohne Validierungsmoeglichkeit. p.theta bleibt daher im Code ungenutzt und dient nur der Dokumentation | alle |
+| 10.08. | GeoSphere-Station Wien Hohe Warte (Nr. 5904) | staedtischer Standort mit vollstaendiger Strahlungs-, Temperatur- und Windmessung im geforderten Zeitraum | Lars |
+| 12.08. | Keine Datenluecken zu behandeln | Datensatz 24.06.-01.07.2019, 1009 Zeilen a 10 min; in cglo, tl und ff fehlt kein Wert. Der vorhandene Filter in load_weather_geosphere.m bleibt als Absicherung bestehen | Lars |
+| 12.08. | Rechnen in UTC, Abbildungen in Ortszeit (Europe/Vienna) | Rohdaten sind UTC gestempelt; ohne Umrechnung laege der Mittag in den Abbildungen zwei Stunden zu frueh. Zeitzone wirkt nicht auf die Rechnung, da t aus Differenzen gebildet wird | Linus |
+| 20.08. | A_conv = 2*A (Vorder- und Rueckseite konvektiv wirksam) | Annahme ueber die Einbausituation: freistehend aufgestaendertes, beidseitig umstroemtes Modul wie das Validierungsmodul bei Tuncel et al. 2020, Kap. 2.4. Nicht durch Literatur belegt, da die McAdams-Korrelation fuer eine Plattenseite gilt. Fall A_conv = A wird in der Sensitivitaetsanalyse mitgerechnet | Linus |
+| 20.08. | Fehlermasse getrennt fuer Tag und Nacht ausweisen | Tuncel et al. geben MAE 0.90 degC gesamt, aber 2.61 degC tagsueber an. Ein Vergleich nur ueber den Gesamtzeitraum verduennt die Mittagsabweichung mit unauffaelligen Nachtwerten | Linus |
+| 20.08. | Schwelle "tagsueber": G > 20 W/m^2 | Tuncel et al. definieren die Grenze nicht. Bewusst niedrig gewaehlt, damit Daemmerungsphasen zum Tag zaehlen und der Tagwert nicht kuenstlich guenstig ausfaellt | Linus |
+| **offen** | Bestehkriterium der Validierung: **Vorschlag MAE (tagsueber) < 5 K** | Tuncel et al. erreichen mit dem volleren Nusselt-Ansatz tagsueber MAE 2.61 degC. Unser Basismodell mit linearer Konvektion kann das systematisch nicht unterbieten. Der Wert ist damit aus der Literatur begruendet und nicht nachtraeglich passend gewaehlt. **In der Gruppe zu bestaetigen** | Linus |
+| **offen** | Umgebungstemperatur fuer die Validierung | Urspruenglicher Beschluss (10.08.): aus dem Graphen im Tuncel-Paper ableiten. **Hinfaellig**, siehe Abschnitt "Offene Punkte" unten: Abb. 1 enthaelt keine Eingangsgroessen | |
 | TT.MM. | Modulabmessungen L=1.650 m, B=0.990 m (Industriestandard 60-Zellen-Modul) | Tuncel et al. 2020 gibt keine Abmessungen an; Standardgroesse konsistent mit A~1.6 m^2 bei Herteleer et al. 2023, Tab. 1, und mit der Effizienzklasse (12.7 %) des Tuncel-Validierungsmoduls | Tom |
 | TT.MM. | alpha_abs = tau_alpha = 0.90 | Standardannahme nach Duffie & Beckman 1991 (tau*alpha = 0.9), unabhaengig bestaetigt durch gemessene c-Si-Absorption ~90.5 % (AM1.5) | Tom |
 | TT.MM. | eps_front = eps_back = 0.87 | Driesse, Stein & Theristis 2022: Literaturspanne Glas 0.84-0.91, Backsheet 0.85-0.89; Mittelwert je Bereich gewaehlt | Tom |
@@ -30,9 +36,60 @@ Format: Datum | Entscheidung | Begruendung | Wer
 
 ---
 
+## Offene Punkte, in der Gruppe zu entscheiden
+
+**1. Validierung gegen Tuncel Abb. 1 ist so nicht durchfuehrbar.**
+Abb. 1(a) zeigt ausschliesslich die Modultemperatur, gemessen und
+modelliert. Einstrahlung, Umgebungstemperatur und Windgeschwindigkeit sind
+weder in der Abbildung noch sonst im Paper als Zahlenwerte veroeffentlicht
+(Kap. 2.4 nennt nur, dass sie stuendlich gemessen wurden).
+`load_weather_paper.m` braucht aber genau diese drei als Eingang. Aus der
+Abbildung gewinnen wir nur die Zielgroesse, nicht das, womit man sie
+berechnet. Der Beschluss vom 10.08., die Umgebungstemperatur aus dem
+Graphen abzuleiten, loest das Problem nicht, weil G und v weiterhin fehlen.
+
+Drei Wege stehen zur Wahl:
+
+  a) *Eingangsdaten rekonstruieren.* T_amb aus den Nachtminima von Abb. 1(a)
+     ableiten, G als Klarhimmelmodell fuer Ankara rechnen (das Paper nennt
+     drei der fuenf Tage als klar), v als Konstante annehmen. Liefert eine
+     echte Kurve, beruht aber auf mehreren ungepruefbaren Annahmen.
+  b) *Gegen Abb. 2(b) validieren.* Dort sind fuer den 19. Juni alle
+     Bilanzterme in W/m^2 aufgetragen. Die Verhaeltnisse der Terme lassen
+     sich mit unserem Anwendungsfall vergleichen, ohne Eingangsdaten zu
+     erfinden.
+  c) *Validierungsanspruch zurueckziehen.* Plausibilitaetspruefung plus
+     Benchmark-Vergleich der Fehlermasse, im Protokoll offen begruendet.
+
+Empfehlung Linus: b) und c) kombinieren.
+
+**2. Bestehkriterium** (Zeile oben) muss bestaetigt werden, bevor die
+Ergebnisse vorliegen. Wer die Schwelle nach dem Ergebnis waehlt, sucht sich
+die passende aus.
+
+**3. Bodentemperatur = Umgebungstemperatur** ist mit "keine Messdaten
+verfuegbar" begruendet. Das trifft nicht mehr zu: der GeoSphere-Datensatz
+enthaelt `ts` (Erdbodentemperatur) und `tb10`. Die Annahme laesst sich also
+gegen echte Werte pruefen, statt sie nur zu behaupten. Ein Satz im
+Protokoll genuegt.
+
+**4. Anfangstemperatur.** Die MATLAB-Skripte starten mit
+`T0 = w.Tamb(0)`, das Simulink-Modell mit `p.Tm0 = 298.15 K`. Fuer den
+Vergleich in Kapitel 8.3 sollten beide gleich gesetzt oder die Abweichung
+erwaehnt werden. Bei einer Zeitkonstante von rund 200 s ist der Einfluss
+nach etwa einer halben Stunde abgeklungen.
+
+---
+
 ## Verworfene Ansaetze
 
 Was wir ausprobiert und wieder weggeworfen haben, und warum. Gehoert in
 Kapitel 9 des Protokolls und macht in der Praesentation Eindruck.
 
--
+- **Validierung durch Digitalisieren von Tuncel Abb. 1** (verworfen 16.08.):
+  Die Abbildung enthaelt keine Eingangsgroessen, siehe offener Punkt 1.
+  Der Aufwand haette nur die Zielgroesse geliefert.
+- **`zeit.TimeZone = 'UTC+2'`** (verworfen 16.08.): verschiebt den
+  physikalischen Zeitpunkt statt der Darstellung und waere fuer Winterdaten
+  zusaetzlich falsch. Ersetzt durch Einlesen als UTC mit Darstellung in
+  `Europe/Vienna`.

@@ -351,6 +351,66 @@ die Fehlerzahl spuerbar verschiebt.
 
 → Kapitel 5.1 (Fehlermasse), Kapitel 5.2 (Ergebnisse)
 
+## 20.08. Fahrplan abgearbeitet: offene Punkte in Code und Protokoll geschlossen
+
+**Gemacht:** Die bis dahin gesammelten offenen Punkte in einem Zug
+abgearbeitet. Betroffen sind acht Dateien.
+
+**Eigener Bereich (MATLAB-Kern und Validierung):**
+
+- `calc_errors.m` um eine Tag-Nacht-Trennung erweitert. Optionales drittes
+  Argument `ist_tag`, zusaetzliche Felder `e.tag` und `e.nacht`. Die
+  Begruendung (Tuncel gibt 0,90 gegen 2,61 degC an) steht im Dateikopf, weil
+  sie sonst in einem halben Jahr niemand mehr rekonstruiert.
+- `run_validation.m`: Fehlermasse werden jetzt getrennt berechnet und
+  ausgegeben. Ausserdem ist der Einbau der Messwerte vorbereitet: liegen in
+  der Wetterstruct die Felder `t_mess` und `Tm_mess`, werden sie auf das
+  Zeitgitter des Loesers interpoliert. Bis dahin bleibt der bisherige
+  Platzhalter aktiv, ohne dass etwas abstuerzt.
+- `plot_validation.m`: `title()` entfernt. Der Plotstandard der LVA verlangt
+  die Kernaussage in der Bildunterschrift und keine Wiederholung zwischen
+  Titel, Achse und Caption. Die Fehlermasse werden stattdessen fertig
+  formatiert auf die Konsole ausgegeben und von dort in die Caption
+  uebernommen.
+- Kapitel 4 (Numerik) als Rohfassung geschrieben. Enthaelt die Begruendung
+  der Solverwahl ueber das nicht definierte Steifheitsverhaeltnis eines
+  skalaren Systems, die Energiebilanz als unabhaengige Kontrolle und die
+  Zeitkonstante. Offen bleibt eine einzige Zahl, die maximale Abweichung aus
+  dem Toleranzvergleich.
+- Kapitel 5.1 (Vorgehen und Fehlermasse) geschrieben, einschliesslich der
+  drei Validierungskriterien der Vorlesung und der Herleitung des
+  Bestehkriteriums aus der Literatur. Abschnitt 5.2 als Datengrundlage
+  angelegt, in dem der Befund zu Abb. 1 festgehalten ist.
+
+**Ausserhalb des eigenen Bereichs, mit dem Team abzustimmen:**
+
+- `init_parameters.m` (Toms Datei): `A_conv` und `theta` mit Begruendung
+  kommentiert, `p.G_tag_min = 20` ergaenzt. Die Zahl musste dorthin, weil
+  die Coderegel keine Zahlenwerte ausserhalb dieser Datei erlaubt.
+- `run_sensitivity.m` (Matyas' Datei): Studie ueber `A_conv` von 1*A bis
+  2*A aufgenommen. Damit wird die einzige nicht durch Literatur belegte
+  Annahme quantitativ statt argumentativ behandelt.
+- `annahmen.md` (gemeinsam): alle Platzhalterdaten gefuellt, Station und
+  Datenluecken eingetragen, vier neue Zeilen ergaenzt, ein Abschnitt
+  "Offene Punkte" mit den vier Gruppenentscheidungen angelegt und zwei
+  verworfene Ansaetze dokumentiert.
+
+**Dabei einen Fehler in der Auswertung der Sensitivitaetsanalyse gefunden.**
+`plot_sensitivity.m` bestimmte den Bezugswert der relativen Darstellung als
+*mittleren* Wert der jeweiligen Reihe. Das trifft nur zu, wenn der
+Nominalwert zufaellig in der Mitte liegt. Bei `eps_front` war das schon
+vorher nicht der Fall (Mitte 0,85, tatsaechlicher Nominalwert 0,87), und die
+neue A_conv-Studie hat ihren Nominalfall am oberen Rand. Die Abbildungen
+haetten die Kurven gegen einen falschen Bezugspunkt normiert. Behoben, indem
+`run_sensitivity.m` den Nominalwert je Studie mitschreibt und
+`plot_sensitivity.m` ihn von dort nimmt.
+
+**Nicht erledigt, weil ohne MATLAB nicht moeglich:** Toleranzvergleich und
+die Pruefbefehle. Beides bleibt in der Liste unten.
+
+→ Kapitel 4 und 5 liegen als Rohfassung vor, Kapitel 7.2 bekommt eine
+   zusaetzliche Studie
+
 ---
 
 ## Offen, noch nicht protokolliert
@@ -361,11 +421,18 @@ Diese Schritte stehen noch aus. Beim Abarbeiten hier fortschreiben.
 - [ ] Abgleich gegen die drei Erwartungswerte (C_m, tau, Uebertemperatur),
       Pruefbefehle stehen aus → Kapitel 4.2 und 6.2
 - [ ] Nachweis der Loesungsunabhaengigkeit: Wiederholung mit RelTol = AbsTol =
-      1e-8, maximale Abweichung in T_m notieren → Kapitel 4.2
-- [ ] Digitalisierte Tuncel-Daten einsetzen, Validierungslauf, Fehlermasse
-      → Kapitel 5.2
-- [ ] Bestehkriterium fuer die Validierung festlegen (Zahl in K, vor dem
-      Ergebnis) → Kapitel 5.1 und `annahmen.md`
+      1e-8, maximale Abweichung in T_m notieren → Kapitel 4.2, dort ist die
+      Zahl das einzige verbliebene TODO
+- [ ] `run_sensitivity` einmal laufen lassen, jetzt mit der A_conv-Studie
+      → Kapitel 7.2
+- [x] Bestehkriterium formuliert und begruendet (MAE tagsueber unter 5 K)
+      → steht in `annahmen.md`, **muss in der Gruppe bestaetigt werden**
+- [ ] Datengrundlage der Validierung: Gruppenentscheidung zwischen den drei
+      Wegen in `annahmen.md`, offener Punkt 1 → Kapitel 5.2
+- [ ] Bodentemperatur gegen `ts` und `tb10` aus dem GeoSphere-Datensatz
+      pruefen, statt die Annahme nur zu behaupten → Kapitel 9.1
+- [ ] Anfangstemperatur zwischen MATLAB (`T0 = Tamb(0)`) und Simulink
+      (`p.Tm0 = 298.15`) angleichen oder Abweichung begruenden → Kapitel 8.3
 
 ---
 
@@ -376,3 +443,5 @@ Diese Schritte stehen noch aus. Beim Abarbeiten hier fortschreiben.
 | Durchsicht des MATLAB-Kerns gegen die Modellgleichungen, Aufspueren des ungenutzten Parameters `theta` und des Plotstandard-Verstosses | Claude (Claude Code) | Beide Befunde im Quelltext an der genannten Stelle nachgesehen und bestaetigt |
 | Ueberschlagsrechnung C_m, tau, stationaeres Delta-T als Erwartungswert vor dem ersten Lauf | Claude (Claude Code) | Von Hand nachgerechnet; Gegenprobe gegen die Simulation steht noch aus |
 | Pruefung des exportierten Abbildungs-PDF, Diagnose des Dark-Mode-Problems und Korrektur von `fig_style.m` | Claude (Claude Code) | PDF vor und nach der Korrektur angesehen, Farbwechsel bestaetigt |
+| Durchsicht von Tuncel et al. 2020 auf Fehlerdefinition und Datengrundlage der Abb. 1 | Claude (Claude Code) | Abbildung und Kap. 2.4/3 des Papers selbst gelesen; die Aussage, dass keine Eingangsgroessen veroeffentlicht sind, am Original geprueft |
+| Erweiterung von `calc_errors.m`, Rohfassung der Kapitel 4 und 5.1 | Claude (Claude Code) | Formeln gegen die Standarddefinitionen und die Vorzeichenkonvention des Papers geprueft; Text vor Uebernahme durchgearbeitet |

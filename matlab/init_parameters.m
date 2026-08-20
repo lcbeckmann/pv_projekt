@@ -28,7 +28,26 @@ function p = init_parameters()
 p.L        = 1.650;      % Modullaenge                         [m]   Industriestandard 60-Zellen-Modul; konsistent mit A~1.6 m^2 bei Herteleer et al. 2023, Tab. 1
 p.B        = 0.990;      % Modulbreite                         [m]   Industriestandard 60-Zellen-Modul; konsistent mit A~1.6 m^2 bei Herteleer et al. 2023, Tab. 1
 p.A        = p.L * p.B;  % Aperturflaeche                      [m^2]
-p.A_conv   = 2 * p.A;    % konvektiv wirksame Flaeche (Vorder- + Rueckseite) [m^2]
+
+% A_conv: Vorder- UND Rueckseite sind konvektiv wirksam, daher der Faktor 2.
+% Das ist eine Annahme ueber die EINBAUSITUATION, kein Literaturwert: sie
+% gilt fuer ein freistehend aufgestaendertes Modul, das beidseitig umstroemt
+% wird (so war auch das Validierungsmodul der GUENAM-Anlage montiert, Tuncel
+% et al. 2020, Kap. 2.4). Fuer ein dach- oder fassadenintegriertes Modul waere
+% A_conv = A anzusetzen, weil die Rueckseite dann nicht frei umstroemt ist.
+% Die Annahme ist nicht harmlos: die zugrunde liegende McAdams-Korrelation
+% (siehe Abschnitt 4) ist fuer EINE ueberstroemte Plattenseite aufgestellt,
+% der Faktor 2 verdoppelt also den konvektiven Waermeuebergang. Konvektion
+% ist im Anwendungsfall mit rund 49 % der dominante Verlustpfad. Der Fall
+% A_conv = A wird deshalb in der Sensitivitaetsanalyse mitgerechnet.
+p.A_conv   = 2 * p.A;    % konvektiv wirksame Flaeche (Vorder- + Rueckseite) [m^2]  Annahme: freistehend aufgestaendert, beidseitig umstroemt
+
+% theta wird im Basismodell BEWUSST NICHT VERWENDET. Entscheidung der
+% Startsitzung: die Globalstrahlung wird horizontal uebernommen, wie
+% GeoSphere sie liefert, ohne Umrechnung auf die geneigte Modulebene. Der
+% Wert steht hier, weil er die Geometrie des Validierungsmoduls dokumentiert
+% und fuer eine spaetere Erweiterung (Transposition auf Modulebene) gebraucht
+% wuerde. Er ist also Dokumentation, kein toter Code.
 p.theta    = deg2rad(32);% Neigungswinkel zur Horizontalen     [rad]  Tuncel et al. 2020, Kap. 2.4 (Validierungsmodul GUENAM Ankara: 32 Grad, suedorientiert)
 
 % ---------------------------------------------------------------------
@@ -126,5 +145,16 @@ p.Tm0 = 298.15;
 p.solver   = 'ode45';    % Begruendung siehe Protokoll, Kap. 4.2
 p.RelTol   = 1e-6;       % bewusst gesetzt, nicht Default
 p.AbsTol   = 1e-6;       % bezieht sich auf T in K
+
+% ---------------------------------------------------------------------
+% 8) Auswertung
+% ---------------------------------------------------------------------
+% Schwelle, ab der ein Zeitschritt als "tagsueber" gilt. Gebraucht fuer die
+% getrennten Fehlermasse in calc_errors.m. Tuncel et al. 2020 geben MAE
+% sowohl fuer den gesamten Zeitraum (0.90 degC) als auch nur fuer den Tag
+% (2.61 degC) an, definieren die Grenze aber nicht. Wir setzen sie bewusst
+% niedrig, damit Daemmerungsphasen noch zum Tag zaehlen und der Tagwert
+% nicht kuenstlich guenstig wird.
+p.G_tag_min = 20;        % Untergrenze Globalstrahlung fuer "Tag"  [W/m^2]  eigene Festlegung, siehe doku/annahmen.md
 
 end

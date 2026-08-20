@@ -1,31 +1,120 @@
 \section{Numerische Umsetzung}
 \label{sec:numerik}
 
-% VERANTWORTLICH: ...
+% VERANTWORTLICH: Linus
+% ROHFASSUNG. Offene Zahlen sind mit TODO markiert.
 
 \subsection{Programmstruktur}
 
-% Kurze Uebersicht der Dateien und wer was aufruft. Ein Absatz plus Liste
-% reicht, der Code selbst gehoert nicht ins Protokoll.
-% Erwaehnen: Rechnen und Plotten sind getrennt, Ergebnisse werden in
-% .mat-Dateien zwischengespeichert.
+Die Implementierung trennt konsequent zwischen Parametern, Rechnung und
+Darstellung. Alle Zahlenwerte stehen ausschliesslich in
+\texttt{init\_parameters.m}; keine andere Datei enthaelt einen physikalischen
+Parameter. Die rechte Seite der Bilanzgleichung~\eqref{eq:bilanz} steht in
+\texttt{pv\_thermal\_ode.m} und ruft je eine eigene Funktion fuer die
+elektrische Leistung, den Waermeuebergangskoeffizienten und den
+Strahlungsterm auf. Diese Funktion enthaelt bewusst keine Fallunterscheidung
+und keine Datenaufbereitung, da der Loeser sie sehr haeufig auswertet.
+
+Die Skripte \texttt{run\_*.m} rechnen und legen ihr Ergebnis als
+\texttt{.mat}-Datei ab, die Skripte \texttt{plot\_*.m} laden ausschliesslich
+und zeichnen. Diese Trennung ist keine Formalie: als sich herausstellte, dass
+die exportierten Abbildungen die Farben des dunklen Oberflaechenmodus
+uebernommen hatten, liess sich das durch einen einzigen Aufruf der
+Plotskripte beheben, ohne eine Simulation zu wiederholen.
+
+Alle Groessen werden in SI-Einheiten gefuehrt, Temperaturen intern
+durchgaengig in Kelvin. Die Umrechnung in Grad Celsius erfolgt erst beim
+Zeichnen. Jede Gleichung im Quelltext traegt die Nummer, unter der sie in
+Abschnitt~\ref{sec:modellbildung} eingefuehrt wurde.
 
 \subsection{Wahl des Loesungsverfahrens}
 \label{sec:solver}
 
-% Das ist der Abschnitt, in dem die Vorlesung am direktesten geprueft wird.
-% Zu beantworten:
-%   - Ist das Problem steif? Das System ist skalar, ein Steifheitsverhaeltnis
-%     ist damit gar nicht definiert. Daraus folgt die Wahl eines expliziten
-%     Verfahrens.
-%   - Warum ode45 (Dormand-Prince, Ordnung 5 mit eingebetteter Ordnung 4
-%     zur Schrittweitensteuerung) und nicht ode15s.
-%   - Welche Toleranzen wurden gesetzt und warum nicht die Defaults.
-%   - Nachweis der Loesungsunabhaengigkeit: Rechnung mit strengerer Toleranz
-%     wiederholen und zeigen, dass sich das Ergebnis nicht mehr aendert.
+Das Modell besitzt genau einen Zustand. Ein Steifheitsverhaeltnis ist als
+Quotient der betragsmaessig groessten und kleinsten Eigenwerte der
+Jacobi-Matrix definiert; bei einem skalaren System existiert nur ein
+Eigenwert, das Verhaeltnis ist also nicht definiert. Das Problem kann damit
+nicht steif sein, und ein implizites Verfahren wie \texttt{ode15s} haette
+keinen Vorteil, sondern nur den Aufwand der Jacobi-Auswertung in jedem
+Schritt.
+
+Gewaehlt wurde \texttt{ode45}, das Verfahren von Dormand und Prince. Es
+integriert mit einem Verfahren fuenfter Ordnung und schaetzt den lokalen
+Fehler ueber eine eingebettete Loesung vierter Ordnung, aus der die
+Schrittweitensteuerung folgt. Die adaptive Schrittweite ist hier von
+praktischem Nutzen: waehrend der Nachtstunden aendert sich die
+Modultemperatur nur langsam und der Loeser kann grosse Schritte machen,
+waehrend er bei Bewoelkungswechseln von selbst feiner wird.
+
+Die Toleranzen wurden bewusst auf $\mathrm{RelTol} = \mathrm{AbsTol} =
+10^{-6}$ gesetzt und nicht auf den Voreinstellungen belassen. Die absolute
+Toleranz bezieht sich auf die Temperatur in Kelvin; bei Werten um
+$300\,\mathrm{K}$ ist die relative Toleranz die bindende Groesse.
+
+\paragraph{Nachweis der Loesungsunabhaengigkeit.}
+% TODO Zahlen aus dem Toleranzvergleich einsetzen (run_usecase mit
+% RelTol = AbsTol = 1e-8 wiederholen, max. Abweichung in Tm bilden).
+Um zu zeigen, dass die Loesung nicht mehr von der Schrittweitensteuerung
+abhaengt, wurde der Anwendungsfall mit verschaerften Toleranzen von
+$10^{-8}$ wiederholt und mit dem Ergebnis der Standardrechnung verglichen.
+Die maximale Abweichung der Modultemperatur betraegt TODO\,K und liegt damit
+weit unterhalb jeder physikalisch bedeutsamen Groesse.
+
+\paragraph{Energiebilanz als unabhaengige Kontrolle.}
+Ein schaerferes Kriterium als der reine Toleranzvergleich ist die Frage, ob
+das Verfahren ueber den gesamten Simulationszeitraum Energie erhaelt. Fuer
+den Anwendungsfall ueber $168\,\mathrm{h}$ ergibt die Integration der
+Einzelterme
+
+\begin{center}
+\begin{tabular}{lr}
+  \toprule
+  Groesse & Energie in kWh \\
+  \midrule
+  absorbierte Einstrahlung & 81{,}64 \\
+  elektrisch abgefuehrt    &  9{,}73 \\
+  konvektiv abgefuehrt     & 40{,}19 \\
+  abgestrahlt              & 31{,}73 \\
+  \midrule
+  Summe der Abfluesse      & 81{,}65 \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+Die Summe der drei Abfluesse weicht um $0{,}01\,\mathrm{kWh}$ von der
+zugefuehrten Energie ab, also um ein Hundertstel Prozent. Die Differenz
+entspricht der Aenderung des Speicherterms zwischen Anfangs- und Endzustand.
+Der Loeser erzeugt und vernichtet ueber eine Woche Simulationszeit also
+keine nennenswerte Energie.
+
+\paragraph{Zeitkonstante.}
+Linearisiert man die Verluste um einen Arbeitspunkt bei $300\,\mathrm{K}$
+und $v = 2\,\mathrm{m/s}$, so ergibt sich ein Gesamtleitwert von rund
+$61\,\mathrm{W/K}$ und mit $\Cm \approx 12{,}4\,\mathrm{kJ/K}$ eine
+Zeitkonstante von etwa $200\,\mathrm{s}$. Dieser Wert liegt in der von
+Herteleer et al.~\cite{herteleer2023} genannten Groessenordnung von einigen
+hundert Sekunden. Er ist zugleich deutlich kleiner als das Messraster der
+Eingangsdaten von $600\,\mathrm{s}$, worauf Abschnitt~\ref{sec:sensitivitaet}
+zurueckkommt.
 
 \subsection{Behandlung der Wetterdaten}
 
-% Warum die Messreihen interpoliert werden muessen: der Solver waehlt seine
-% Zeitschritte adaptiv und fragt Zeitpunkte zwischen den Messwerten ab.
-% Warum lineare und nicht kubische Interpolation.
+Der Loeser waehlt seine Zeitpunkte selbst und fragt dabei Zeiten ab, die
+zwischen den Messwerten liegen. Die Messreihen fuer Globalstrahlung,
+Umgebungstemperatur und Windgeschwindigkeit muessen daher als stetige
+Funktionen der Zeit bereitstehen. Die Interpolanten werden einmal beim Laden
+der Daten aufgebaut und nicht bei jedem Aufruf der rechten Seite neu, was
+den Rechenaufwand deutlich senkt.
+
+Interpoliert wird linear. Ein kubischer Spline waere glatter, kann aber
+zwischen den Stuetzstellen ueberschwingen. Bei einem Bewoelkungssprung, wie
+er in den Messdaten mehrfach vorkommt, koennte das negative Werte der
+Globalstrahlung erzeugen, die physikalisch unmoeglich sind. Die lineare
+Interpolation bildet den Verlauf zwar mit Knicken ab, bleibt aber innerhalb
+der gemessenen Werte.
+
+Die Zeitstempel des Datensatzes sind in UTC angegeben. Gerechnet wird in
+UTC, da die Zeitachse ohnehin aus Differenzen gebildet wird und eine
+Zonenverschiebung auf das Ergebnis keinen Einfluss haette. Fuer die
+Abbildungen werden die Zeitpunkte in die Ortszeit umgesetzt, weil das
+Strahlungsmaximum sonst zwei Stunden zu frueh erschiene.

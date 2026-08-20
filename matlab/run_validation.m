@@ -19,6 +19,7 @@ G     = w.G(t);
 Tamb  = w.Tamb(t);
 W_el  = calc_w_el(G, Tm, p);
 
+<<<<<<< Updated upstream
 % ---------------------------------------------------------------------
 % Gemessene Modultemperatur Tm_mess, digitalisiert aus Tuncel et al. 2020,
 % Abb. 1a (blaue Kurve "Tm, measured"). Vorgehen: Seite als Bild
@@ -55,6 +56,23 @@ Tm_mess_h = [ ...     % [K], digitalisiert aus Abb. 1a, Stundenraster
 
 Tm_mess = interp1(h_mess*3600, Tm_mess_h, t, 'linear', 'extrap');
 fehler  = calc_errors(Tm, Tm_mess);
+=======
+% Messwerte auf das Zeitgitter des Solvers bringen.
+% Der Solver waehlt seine Schritte adaptiv, die digitalisierten Punkte aus
+% dem Paper liegen dagegen auf vollen Stunden. Verglichen wird deshalb an
+% den Zeitpunkten, die der Solver ohnehin geliefert hat.
+if isfield(w, 't_mess') && isfield(w, 'Tm_mess')
+    Tm_mess = interp1(w.t_mess, w.Tm_mess, t, 'linear', NaN);
+else
+    Tm_mess = nan(size(t));   % noch keine Messwerte hinterlegt
+end
+
+% Fehlermasse getrennt fuer Tag und Nacht, siehe calc_errors.m.
+% Tuncel et al. geben beide Werte an, ein Vergleich nur ueber den
+% Gesamtzeitraum waere nicht aussagekraeftig.
+ist_tag = G > p.G_tag_min;
+fehler  = calc_errors(Tm, Tm_mess, ist_tag);
+>>>>>>> Stashed changes
 
 if ~exist('results', 'dir'); mkdir('results'); end
 save(fullfile('results', 'validation.mat'), ...
@@ -62,3 +80,14 @@ save(fullfile('results', 'validation.mat'), ...
 
 fprintf('run_validation fertig. %d Zeitschritte, Tm_max = %.1f degC\n', ...
         numel(t), max(Tm) - 273.15);
+
+if fehler.N > 0
+    fprintf('  gesamt   MAE %.2f K | RMSE %.2f K | MBE %+.2f K | N = %d\n', ...
+            fehler.MAE, fehler.RMSE, fehler.MBE, fehler.N);
+    fprintf('  tagsueber MAE %.2f K | RMSE %.2f K | MBE %+.2f K | N = %d\n', ...
+            fehler.tag.MAE, fehler.tag.RMSE, fehler.tag.MBE, fehler.tag.N);
+    fprintf('  nachts   MAE %.2f K | RMSE %.2f K | MBE %+.2f K | N = %d\n', ...
+            fehler.nacht.MAE, fehler.nacht.RMSE, fehler.nacht.MBE, fehler.nacht.N);
+else
+    fprintf('  Keine Messwerte hinterlegt, Fehlermasse noch nicht berechenbar.\n');
+end
