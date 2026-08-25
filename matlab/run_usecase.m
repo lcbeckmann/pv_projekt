@@ -43,3 +43,13 @@ fprintf('run_usecase fertig. Energieanteile in kWh:\n');
 fprintf('  Einstrahlung %.2f | elektrisch %.2f | Konvektion %.2f | Strahlung %.2f\n', ...
         energie.solar/3.6e6, energie.el/3.6e6, ...
         energie.konv/3.6e6, energie.rad/3.6e6);
+
+% Auswertung: Stunden pro Tag über 25°C-Schwelle
+T_schwelle = 25 + 273.15;
+ueber_schwelle = Tm > T_schwelle;
+dt_h = mean(diff(t_h));               
+stunden_ueber_schwelle = sum(ueber_schwelle) * dt_h;
+anzahl_tage = (t_h(end) - t_h(1)) / 24;                % Länge des Zeitraums in Tagen
+stunden_pro_tag = stunden_ueber_schwelle / anzahl_tage;
+fprintf('Durchschnittlich %.2f Stunden pro Tag ueber %.0f Grad C.\n', ...
+    stunden_pro_tag, T_schwelle - 273.15);
