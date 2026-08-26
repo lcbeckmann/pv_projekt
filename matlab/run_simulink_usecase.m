@@ -1,11 +1,22 @@
 % run_simulink_usecase.m
-% Anwendungsfall: GeoSphere-Messwoche 24.06. bis 01.07.2019 im
-% Simulink-Modell. Rechnet und speichert, plottet nicht.
+% Aufgabenpunkt 8: derselbe Anwendungsfall im Simulink-Modell.
+% Rechnet NUR. Ergebnis landet in results/simulink_usecase.mat.
 
-w = load_weather_geosphere(fullfile('data','geosphere_2019.csv'));
+p = init_parameters();
+w = load_weather_geosphere();
+
 wetter = w.matrix;
 
 out = sim('pv_simulink', 'StopTime', num2str(w.t_end), 'MaxStep', '300');
 
-Tm = out.logsout.get('Tm').Values.Data;
-fprintf('Tm: min %.1f degC, max %.1f degC\n', min(Tm)-273.15, max(Tm)-273.15);
+res    = struct();
+res.t  = out.logsout.get('Tm').Values.Time;
+for name = {'Tm','Q_solar','Q_konv','Q_rad','W_el'}
+    res.(name{1}) = out.logsout.get(name{1}).Values.Data;
+end
+
+if ~isfolder('results'); mkdir('results'); end
+save(fullfile('results','simulink_usecase.mat'), 'res', 'p', 'w');
+
+fprintf('Tm: min %.1f degC, max %.1f degC\n', ...
+        min(res.Tm)-273.15, max(res.Tm)-273.15);
