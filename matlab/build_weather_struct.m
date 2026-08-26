@@ -24,4 +24,11 @@ w.t     = t;
 w.t_end = t(end);
 w.dt    = median(diff(t));
 
+% Matrix fuer den From-Workspace-Block in Simulink.
+% Spaltenreihenfolge ist FEST: [Zeit, G, Tamb, v].
+w.G_vec    = G;
+w.Tamb_vec = Tamb;
+w.v_vec    = v;
+
+w.matrix = [t, G, Tamb, v];
 end
