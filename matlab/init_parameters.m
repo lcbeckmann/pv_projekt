@@ -32,9 +32,13 @@ p.A        = p.L * p.B;  % Aperturflaeche                      [m^2]
 % A_conv: Vorder- UND Rueckseite sind konvektiv wirksam, daher der Faktor 2.
 % Das ist eine Annahme ueber die EINBAUSITUATION, kein Literaturwert: sie
 % gilt fuer ein freistehend aufgestaendertes Modul, das beidseitig umstroemt
-% wird (so war auch das Validierungsmodul der GUENAM-Anlage montiert, Tuncel
-% et al. 2020, Kap. 2.4). Fuer ein dach- oder fassadenintegriertes Modul waere
-% A_conv = A anzusetzen, weil die Rueckseite dann nicht frei umstroemt ist.
+% wird. Fuer ein dach- oder fassadenintegriertes Modul waere A_conv = A
+% anzusetzen, weil die Rueckseite dann nicht frei umstroemt ist.
+% OFFEN: Wie das Validierungsmodul bei Tuncel et al. 2020 montiert war, ist
+% dem Paper nicht eindeutig zu entnehmen. Kap. 2.4 nennt nur "Outdoor
+% Testing Facility", Kap. 2.1.3 spricht dagegen allgemein von "PV modules
+% mounted on a roof" und fuehrt das Dach als dritten Strahlungspartner. Diese
+% Frage ist nachzurecherchieren, siehe doku/annahmen.md.
 % Die Annahme ist nicht harmlos: die zugrunde liegende McAdams-Korrelation
 % (siehe Abschnitt 4) ist fuer EINE ueberstroemte Plattenseite aufgestellt,
 % der Faktor 2 verdoppelt also den konvektiven Waermeuebergang. Konvektion

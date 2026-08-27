@@ -79,6 +79,51 @@ Vergleich in Kapitel 8.3 sollten beide gleich gesetzt oder die Abweichung
 erwaehnt werden. Bei einer Zeitkonstante von rund 200 s ist der Einfluss
 nach etwa einer halben Stunde abgeklungen.
 
+**5. Zeitbezug der Messkurve.** Die Abbildung `validierung_temperatur.pdf`
+zeigt einen durchgaengigen Versatz von drei bis vier Stunden zwischen
+Modell und digitalisierter Messung. Die x-Achse in Tuncel Abb. 1 ist mit
+"Hours" von 0 bis 120 beschriftet, ohne Angabe, welcher Tageszeit die Null
+entspricht. Zu klaeren, bevor die Fehlermasse ins Protokoll gehen: Ist der
+Versatz eine Folge der Achsenzuordnung, der Digitalisierung oder des in
+`load_weather_paper.m` angenommenen Sonnenverlaufs?
+
+**6. Letzte sieben Stunden der Messkurve.** Ab etwa 113 h ist
+`Tm_mess` konstant 293,74 K. Das ist ein Digitalisierungsartefakt und kein
+Messwert, geht aber derzeit in die Fehlermasse ein. Ausschliessen?
+
+**7. Bestehkriterium bei konstruierten Eingangsdaten.** Die Grenze von 5 K
+wurde fuer eine Validierung gegen gemessene Eingangsgroessen formuliert. Bei
+angenommenem Wetter misst sie Modell- und Annahmefehler gemeinsam. Entweder
+neu formulieren oder ausdruecklich als nicht anwendbar kennzeichnen.
+
+---
+
+## Nachzurecherchieren
+
+**a) Wie war das Validierungsmodul bei Tuncel montiert?**
+Entscheidend fuer A_conv. Kap. 2.4 nennt nur "GUENAM's Outdoor Testing
+Facility", Kap. 2.1.3 spricht dagegen von "PV modules mounted on a roof"
+und fuehrt das Dach als dritten Strahlungspartner neben Himmel und Erde.
+Bei Dachmontage waere A_conv = 2*A nicht haltbar. Moegliche Quellen:
+Referenz [10] und [19] des Papers (Tuncel/Ozden/Balog, PVCon 2018 bzw.
+Ozden et al.), Webseite der GUENAM-Anlage.
+
+**b) Zeitabhaengiges (tau*alpha).** Das Paper schreibt zu Gl. (10), das
+Transmissions-Absorptions-Produkt sei "dependent on time and date", also
+einfallswinkelabhaengig. Wir setzen konstant 0,90. Welchen Ansatz nutzt
+das Paper, und wie gross waere der Effekt in den Randstunden?
+
+**c) Sonnenauf- und -untergang Ankara im Juni.** In
+`load_weather_paper.m` mit 5:00 und 20:00 grob angesetzt. Belegbare Werte
+wuerden den Zeitversatz aus Punkt 5 eingrenzen helfen.
+
+**d) Bodentemperatur.** Der GeoSphere-Datensatz enthaelt `ts` und `tb10`.
+Damit laesst sich die Annahme "Bodentemperatur gleich Lufttemperatur"
+gegen Messwerte halten, statt sie zu behaupten.
+
+**e) `doku/Schichtaufbau_Cm_Dokumentation.md`** wird in
+`init_parameters.m` referenziert, existiert aber nicht im Repo.
+
 ---
 
 ## Verworfene Ansaetze

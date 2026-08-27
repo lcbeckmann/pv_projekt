@@ -518,6 +518,145 @@ nicht geeignet.
 → Kapitel 5.2 (Ergebnisse), Kapitel 5.3 (Diskussion der Abweichungen),
    Kapitel 7.2 (A_conv), Kapitel 9.1 (Gueltigkeitsbereich)
 
+## 20.08. Validierungsabbildung ausgewertet: Zeitversatz, nicht A_conv
+
+**Gemacht:** `plot_validation` erzeugt und die Abbildung ausgewertet. Sie
+klaert die offene Frage aus dem vorigen Eintrag, und zwar anders als dort
+vermutet.
+
+**Hauptbefund: Modell und Messung sind gegeneinander zeitversetzt.** Die
+Modellkurve erreicht ihre Tagesmaxima bei etwa 13, 37, 61, 86 und 110
+Stunden, die digitalisierte Messkurve bei etwa 17, 41, 64, 89 und 113
+Stunden. Der Versatz betraegt durchgaengig **drei bis vier Stunden**, die
+Messung laeuft dem Modell nach.
+
+**Damit ist die Fehlerstruktur erklaert.** Ein reiner Zeitversatz erzeugt
+genau das beobachtete Muster: grosse Betraege der Einzelabweichungen (MAE
+tagsueber 8,90 K), die sich im Mittel aber weitgehend aufheben (MBE
+tagsueber -0,55 K). Der Verdacht aus dem vorigen Eintrag, die Annahme
+A_conv = 2*A koenne die fehlenden 9,4 K in der Spitze erklaeren, ist damit
+**nicht haltbar**. Die Uebereinstimmung der Groessenordnungen war Zufall.
+Ein Amplitudenfehler laesst sich aus diesen Daten erst beurteilen, wenn der
+Zeitversatz beseitigt ist.
+
+**Woher der Versatz kommt, ist noch offen.** Drei Kandidaten:
+
+  1. Die Zeitachse in Tuncel Abb. 1 ist mit "Hours" von 0 bis 120
+     beschriftet, ohne Angabe, welcher Tageszeit die Null entspricht. Das
+     Paper legt nirgends fest, dass die Reihe um Mitternacht beginnt.
+  2. Die Kalibrierung der x-Achse bei der Digitalisierung.
+  3. Der in `load_weather_paper.m` angenommene Sonnenverlauf (Aufgang 5:00,
+     Untergang 20:00, Maximum also 12:30). Fuer Ankara im Juni ist dieser
+     Ansatz plausibel, was Kandidat 1 wahrscheinlicher macht als Kandidat 3.
+
+**Zweiter Befund: die Amplituden passen tageweise gegenlaeufig.** An den
+ersten beiden Tagen, die das Paper als "partially cloudy" beschreibt, liegt
+das **Modell ueber** der Messung (41 gegen 37 degC). An den drei klaren
+Tagen liegt es **darunter** (45 gegen 54 degC). Der konstruierte
+Bewoelkungsfaktor daempft an den bewoelkten Tagen also zu wenig und die
+klaren Tage erreichen zu wenig Einstrahlung. Auch das spricht fuer die
+Wetterannahme als Fehlerquelle und nicht fuer das Modell.
+
+**Dritter Befund, Datenqualitaet:** Ab etwa 113 Stunden verlaeuft die
+Messkurve konstant bei 20,6 degC. Die letzten fuenf digitalisierten Werte
+sind identisch (293,74 K). Das ist ein Artefakt der Digitalisierung, kein
+Messwert. Diese Punkte gehen derzeit in die Fehlermasse ein und
+verschlechtern sie zusaetzlich. Sie sollten ausgeschlossen werden.
+
+**Vierter Befund, Nachtverhalten:** Das Modell liegt nachts zwei bis drei
+Kelvin unter der Umgebungstemperatur, die Messung praktisch auf ihr. Das
+kann an einer zu stark angesetzten Abstrahlung liegen (Swinbank, eps), an
+Rueckstrahlung vom Untergrund, die das Modell nicht kennt, oder schlicht
+daran, dass die angenommene Umgebungstemperatur zu niedrig ist. Mit
+konstruierten Eingangsdaten ist das nicht entscheidbar.
+
+**Konsequenz:** Die Fehlermasse in ihrer jetzigen Form bewerten
+ueberwiegend die Qualitaet der Wetterannahme, nicht die des Modells. Sie
+gehoeren so ins Protokoll, aber mit dieser Einordnung. Vor einer erneuten
+Auswertung sind zu klaeren: der Zeitversatz und der Ausschluss der letzten
+Stunden.
+
+→ Kapitel 5.2 (Ergebnisse), Kapitel 5.3 (Diskussion), Kapitel 9.2
+
+## 20.08. Moegliche Ursachen der Abweichung, sortiert (Material fuer Kap. 5.3)
+
+Zu trennen sind zwei Fragen, die leicht vermischt werden: die Abweichung
+unseres Modells von der **Messkurve** und die Abweichung von **Tuncels
+Modell**. Die erste wird derzeit von der Datengrundlage dominiert, die
+zweite ist die inhaltlich interessantere.
+
+### A. Was den aktuellen Vergleich dominiert (Datengrundlage)
+
+1. **Zeitversatz von drei bis vier Stunden.** Belegt aus der Abbildung,
+   siehe vorigen Eintrag. Erklaert den Grossteil des Tages-MAE von 8,90 K.
+   Kein Modellfehler.
+2. **Saemtliche Eingangsgroessen sind konstruiert.** G, T_amb und v sind
+   Annahmen, keine Messungen. Der Bewoelkungsfaktor daempft an den beiden
+   bewoelkten Tagen zu wenig (Modell 41 gegen 37 degC gemessen) und die
+   klaren Tage erreichen zu wenig Einstrahlung (45 gegen 54 degC).
+3. **Digitalisierungsartefakt** in den letzten sieben Stunden, dazu eine
+   Ableseunsicherheit von etwa +/- 1 K ueber die gesamte Kurve.
+
+Solange diese drei Punkte bestehen, ist der Zahlenwert der Fehlermasse
+kein Urteil ueber das Modell.
+
+### B. Echte Modellunterschiede zu Tuncel et al.
+
+Nach erwarteter Wirkung geordnet:
+
+1. **Konvektion.** Wir fassen freie und erzwungene Konvektion in
+   h = 5,7 + 3,8 v zusammen und wenden das auf beide Modulseiten an. Tuncel
+   rechnet nach Tab. 1 des Papers vier Stroemungsregime getrennt aus
+   (laminar und turbulent, jeweils natuerlich und erzwungen) und
+   unterscheidet dabei zusaetzlich Ober- und Unterseite sowie die
+   Windrichtung ueber Head-on-, Wake- und Parallel-Regionen. Das ist der
+   groesste strukturelle Unterschied und betrifft mit rund 49 Prozent den
+   dominanten Verlustpfad.
+2. **Transmissions-Absorptions-Produkt.** Das Paper schreibt zu Gl. (10)
+   ausdruecklich, (tau*alpha) sei "a parameter dependent on time and date",
+   also abhaengig vom Einfallswinkel. Wir setzen konstant 0,90. Bei
+   flachem Sonnenstand am Morgen und Abend ueberschaetzt das die
+   eingekoppelte Leistung, mittags trifft es gut. Das erzeugt einen
+   Fehler mit Tagesgang, also genau in der Form, die im Residuum sichtbar
+   waere.
+3. **Strahlungspartner.** Kap. 2.1.3 des Papers nennt Himmel, Erde **und
+   Dach** als Austauschpartner. Unser Modell kennt nur Himmel und Boden,
+   und setzt den Boden gleich der Lufttemperatur. Ein aufgeheizter
+   Untergrund strahlt das Modul von unten an, was die Rueckseitenverluste
+   verringert. Das passt zur Richtung der beobachteten Nachtabweichung
+   (unser Modell nachts zwei bis drei Kelvin zu kalt).
+4. **Einstrahlungsebene.** Tuncel rechnet mit der Einstrahlung in
+   Modulebene, wir uebernehmen die Globalstrahlung horizontal. Fuer ein um
+   32 Grad geneigtes Modul unterscheiden sich beide im Tagesverlauf
+   erheblich, besonders morgens und abends.
+5. **Waermekapazitaet.** Unsere 7572 J/(m^2 K) liegen 32 Prozent ueber den
+   5723 J/(m^2 K) des Papers. Erwartete Wirkung gering: Tuncel variiert
+   C_m selbst ueber zwei Groessenordnungen ohne nennenswerte Aenderung von
+   RMSE und MBE.
+6. **Loesungsverfahren.** Tuncel integriert implizit mit fester
+   Schrittweite von einer Stunde. Bei einer Zeitkonstante von rund 200 s
+   ist das Verfahren stark gedaempft und glaettet kurzfristige Dynamik.
+   Unsere adaptive Loesung bildet Bewoelkungsspruenge schaerfer ab. Fuer
+   den Vergleich mit stuendlich abgelesenen Messwerten ist dieser
+   Unterschied allerdings nachrangig.
+
+### C. Gemeinsame Vereinfachungen beider Modelle
+
+Ein Temperaturknoten statt Schichtmodell, kein Rahmen im Bilanzraum,
+Annahme des MPP-Betriebs. Diese Punkte erklaeren keine Abweichung
+*zwischen* den Modellen, gehoeren aber in Kapitel 9.
+
+### Was davon quantifizierbar ist
+
+Die Angabe verlangt Zahlen statt Entschuldigungen. Aus eigener Rechnung
+belegbar sind: der Zeitversatz (Kreuzkorrelation der beiden Kurven), der
+Einfluss von A_conv und C_m (Sensitivitaetsanalyse liegt vor), und der
+Effekt des winkelabhaengigen (tau*alpha), der sich mit einem einfachen
+Kosinusansatz abschaetzen liesse. Nicht quantifizierbar ohne die
+Originaldaten bleibt der Anteil der Wetterannahme.
+
+→ Kapitel 5.3 (Diskussion der Abweichungen), Kapitel 9.2 (Grenzen)
+
 ---
 
 ## Offen, noch nicht protokolliert
