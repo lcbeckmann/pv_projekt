@@ -156,4 +156,10 @@ p.AbsTol   = 1e-6;       % bezieht sich auf T in K
 % nicht kuenstlich guenstig wird.
 p.G_tag_min = 20;        % Untergrenze Globalstrahlung fuer "Tag"  [W/m^2]  eigene Festlegung, siehe doku/annahmen.md
 
+% --- Batterie (Aufgabenpunkt 7) ---
+% Eigenes Modell
+p.E_nenn   = 1.2 * 3.6e6;   % [J]  Nennenergie, entspricht 1,2 kWh
+p.eta_lade = 0.90;          % [-]  Laderegler und Wandler zusammengefasst
+p.SoC0     = 0.20;          % [-]  Anfangsladezustand
+
 end
