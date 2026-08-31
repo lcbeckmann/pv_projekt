@@ -136,8 +136,7 @@ p.c_area    = sum(schichten(:,1) .* schichten(:,2) .* schichten(:,3)); % [J/(m^2
 p.C_m       = p.c_area * p.A;                                          % [J/K]
 
 
-%Inital Temperatur (Anahme für Simulink, bitte noch korrigieren @Tom)
-p.Tm0 = 298.15; 
+p.Tm0 = 298.15;   % [K] Anfangswert der Modultemperatur
 
 % ---------------------------------------------------------------------
 % 7) Numerik
@@ -156,5 +155,11 @@ p.AbsTol   = 1e-6;       % bezieht sich auf T in K
 % niedrig, damit Daemmerungsphasen noch zum Tag zaehlen und der Tagwert
 % nicht kuenstlich guenstig wird.
 p.G_tag_min = 20;        % Untergrenze Globalstrahlung fuer "Tag"  [W/m^2]  eigene Festlegung, siehe doku/annahmen.md
+
+% --- Batterie (Aufgabenpunkt 7) ---
+% Eigenes Modell
+p.E_nenn   = 1.2 * 3.6e6;   % [J]  Nennenergie, entspricht 1,2 kWh
+p.eta_lade = 0.90;          % [-]  Laderegler und Wandler zusammengefasst
+p.SoC0     = 0.20;          % [-]  Anfangsladezustand
 
 end
