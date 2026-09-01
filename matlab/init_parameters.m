@@ -158,7 +158,7 @@ p.G_tag_min = 20;        % Untergrenze Globalstrahlung fuer "Tag"  [W/m^2]  eige
 
 % --- Batterie (Aufgabenpunkt 7) ---
 % Eigenes Modell
-p.E_nenn   = 1.2 * 3.6e6;   % [J]  Nennenergie, entspricht 1,2 kWh
+p.E_nenn   = 7 * 3.6e6;   % [J]  Nennenergie, entspricht 7 kWh
 p.eta_lade = 0.90;          % [-]  Laderegler und Wandler zusammengefasst
 p.SoC0     = 0.20;          % [-]  Anfangsladezustand
 
