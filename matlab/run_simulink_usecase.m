@@ -15,7 +15,7 @@ out = sim('pv_simulink', ...
 
 res    = struct();
 res.t  = out.logsout.get('Tm').Values.Time;
-for name = {'Tm','Q_solar','Q_konv','Q_rad','W_el','SoC0'}
+for name = {'Tm','Q_solar','Q_konv','Q_rad','W_el','SoC','P_charge'}
     res.(name{1}) = out.logsout.get(name{1}).Values.Data;
 end
 
