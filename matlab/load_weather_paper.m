@@ -60,7 +60,6 @@ bewoelkt      = tag_idx < 2;
 cloud_faktor  = ones(size(t));
 cloud_faktor(bewoelkt) = 0.55 + 0.25 * sin(2*pi*t(bewoelkt) / (3*3600));
 G = max(0, G_klar .* cloud_faktor);
-
 % ---------------------------------------------------------------------
 % Umgebungstemperatur: Tagesgang mit realistischem Phasenversatz (Maximum
 % nachmittags, nicht zur Mittagszeit), Amplitude fuer semi-arides
@@ -69,14 +68,12 @@ G = max(0, G_klar .* cloud_faktor);
 % ANNAHME: Tagesmittel 22 degC, Tagesamplitude +-8 K, Maximum um 15:00 Uhr.
 % ---------------------------------------------------------------------
 Tamb = 273.15 + 22 + 8 * sin(2*pi*(std_tag - 9)/24);   % [K]
-
 % ---------------------------------------------------------------------
 % Windgeschwindigkeit: Tuncel et al. 2020 geben keine Werte an. ANNAHME:
 % moderater, leicht tagesperiodischer Wind (staerker am Nachmittag),
 % typischer Bereich fuer Standorte im Landesinneren ohne Kuestenlage.
 % ---------------------------------------------------------------------
 v = 2.0 + 0.8 * max(0, sin(2*pi*(std_tag - 8)/24));    % [m/s]
-
 w = build_weather_struct(t, G, Tamb, v);
 w.quelle = ['Tuncel et al. 2020, Kap. 3 (Tageszyklus-Beschreibung); ' ...
             'G, Tamb, v selbst als ANNAHME konstruiert (Option B, ' ...
