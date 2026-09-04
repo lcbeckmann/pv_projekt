@@ -11,8 +11,8 @@ w = load_weather_geosphere();
 
 tspan = [0, w.t_end];
 T0    = w.Tamb(0);
-opts  = odeset('RelTol', p.RelTol, 'AbsTol', p.AbsTol);
 
+opts  = odeset('RelTol', p.RelTol, 'AbsTol', p.AbsTol);
 [t, Tm] = ode45(@(t, T) pv_thermal_ode(t, T, p, w), tspan, T0, opts);
 
 % Einzelterme nachrechnen (Postprocessing, nicht im Solver)
@@ -24,32 +24,47 @@ Q_solar = p.alpha_abs .* G .* p.A;
 W_el    = calc_w_el(G, Tm, p);
 Q_konv  = calc_h_conv(v, p) .* p.A_conv .* (Tm - Tamb);
 Q_rad   = calc_q_rad(Tm, Tamb, p);
+
 Q_speicher = Q_solar - W_el - Q_konv - Q_rad;   % = C_m * dTm/dt
 
-energie.solar  = trapz(t, Q_solar);
-energie.el     = trapz(t, W_el);
-energie.konv   = trapz(t, Q_konv);
-energie.rad    = trapz(t, Q_rad);
+% Verlorene elektrische Energie durch Erwaermung ueber T_ref (Gl. 2.3)
+% Ideale Leistung ohne thermische Verluste: beta_ref*(Tm - T_ref) = 0
+W_el_ideal   = G .* p.A .* p.tau_alpha .* p.eta_ref;
+W_el_verlust = W_el_ideal - W_el;                  % = W_el_ideal .* p.beta_ref .* (Tm - p.T_ref)
+
+energie.solar      = trapz(t, Q_solar);
+energie.el         = trapz(t, W_el);
+energie.konv       = trapz(t, Q_konv);
+energie.rad        = trapz(t, Q_rad);
+energie.el_ideal   = trapz(t, W_el_ideal);
+energie.el_verlust = trapz(t, W_el_verlust);
 
 % isfolder statt exist(...,'dir'): exist sucht auch im MATLAB-Suchpfad und
 % meldet den Ordner dann als vorhanden, obwohl save relativ zum aktuellen
 % Arbeitsverzeichnis schreibt.
 if ~isfolder('results'); mkdir('results'); end
+
 save(fullfile('results', 'usecase.mat'), ...
-     't', 'Tm', 'Tamb', 'G', 'v', 'W_el', ...
-     'Q_solar', 'Q_konv', 'Q_rad', 'Q_speicher', 'energie', 'p', 'w');
+'t', 'Tm', 'Tamb', 'G', 'v', 'W_el', 'W_el_ideal', 'W_el_verlust', ...
+'Q_solar', 'Q_konv', 'Q_rad', 'Q_speicher', 'energie', 'p', 'w');
 
 fprintf('run_usecase fertig. Energieanteile in kWh:\n');
 fprintf('  Einstrahlung %.2f | elektrisch %.2f | Konvektion %.2f | Strahlung %.2f\n', ...
         energie.solar/3.6e6, energie.el/3.6e6, ...
         energie.konv/3.6e6, energie.rad/3.6e6);
+fprintf('  ideal el. %.2f kWh | verloren durch Erwaermung %.2f kWh (%.1f %% von ideal)\n', ...
+        energie.el_ideal/3.6e6, energie.el_verlust/3.6e6, ...
+        100 * energie.el_verlust / energie.el_ideal);
 
 % Auswertung: Stunden pro Tag über 25°C-Schwelle
+t_h = t / 3600;   % Zeit in Stunden fuer die Schwellenwert-Auswertung
+
 T_schwelle = 25 + 273.15;
 ueber_schwelle = Tm > T_schwelle;
-dt_h = mean(diff(t_h));               
+dt_h = mean(diff(t_h));
 stunden_ueber_schwelle = sum(ueber_schwelle) * dt_h;
 anzahl_tage = (t_h(end) - t_h(1)) / 24;                % Länge des Zeitraums in Tagen
 stunden_pro_tag = stunden_ueber_schwelle / anzahl_tage;
+
 fprintf('Durchschnittlich %.2f Stunden pro Tag ueber %.0f Grad C.\n', ...
     stunden_pro_tag, T_schwelle - 273.15);

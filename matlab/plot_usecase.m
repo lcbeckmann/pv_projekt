@@ -9,10 +9,9 @@ t_h = t / 3600;
 % --- Abbildung 1: Temperaturverlauf -----------------------------------
 f1 = figure;
 plot(t_h, Tm   - 273.15, '-',  'DisplayName', '$T_\mathrm{m}$'); hold on;
-plot(t_h, Tamb - 273.15, '--', 'DisplayName', '$T_\mathrm{amb}$');
-% Referenzlinien bei 20°C und 25°C
-yline(20, ':', 'Color', [0.5 0.5 0.5], 'HandleVisibility', 'off');
-yline(25, ':', 'Color', [0.5 0.5 0.5], 'HandleVisibility', 'off');
+plot(t_h, Tamb - 273.15, '--', 'DisplayName', '$T_\mathrm{optimal}$');
+% Referenzlinien bei 25°C
+yline(25, ':', 'Color', [0.5 0.5 0.5], 'LineWidth', 1.5, 'HandleVisibility', 'off');
 xlabel('Zeit in h');
 ylabel('Temperatur in $^\circ$C');
 legend('Location', 'northeastoutside');   % Legende ausserhalb, verdeckt nichts
