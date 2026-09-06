@@ -45,8 +45,8 @@ xticks(0:1:floor(t_tage(end)));
 
 linkaxes([ax1 ax2], 'x');
 
-if ~isfolder('abbildungen'); mkdir('abbildungen'); end
-exportgraphics(fig, fullfile('abbildungen','batterie_ladung.pdf'), ...
+if ~isfolder('figures\'); mkdir('figures\'); end
+exportgraphics(fig, fullfile('figures/','batterie_ladung.pdf'), ...
                'ContentType', 'vector');
 
 fprintf('SoC Start %.3f, Ende %.3f\n', res.SoC(1), res.SoC(end));
