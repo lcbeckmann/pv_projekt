@@ -19,7 +19,8 @@ if any(~isnan(Tm_mess))
 end
 xlabel('Zeit in h');
 ylabel('Temperatur in $^\circ$C');
-legend('Location', 'best');
+legend('Location', 'northoutside', 'Orientation', 'horizontal', ...
+       'NumColumns', 3);
 save_figure(f1, 'validierung_temperatur');
 
 % --- Abbildung 2: Residuum --------------------------------------------
