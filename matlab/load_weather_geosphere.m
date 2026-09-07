@@ -2,19 +2,9 @@ function w = load_weather_geosphere(csv_datei)
 %LOAD_WEATHER_GEOSPHERE  Messdaten der GeoSphere Austria (Aufgabenpunkt 5).
 %
 %   w = LOAD_WEATHER_GEOSPHERE(csv_datei)
-%
-%   Zeitraum laut Angabe: 24.06.2019 bis 01.07.2019, moeglichst kurze
-%   Zeitabstaende (10-Minuten-Werte des Messstationsdatensatzes).
-%
-%   Benoetigte Groessen:
-%     Globalstrahlung        [W/m^2]
-%     Lufttemperatur         [degC]  -> wird hier nach K umgerechnet
-%     Windgeschwindigkeit    [m/s]
-%
-%   Zu klaeren und im Protokoll zu dokumentieren:
-%     - Zeitzone der Rohdaten (UTC oder MEZ)
-%     - Umgang mit Datenluecken
-%     - Umrechnung Horizontal- auf Modulebene, oder Annahme G_poa = G_hor
+%   Zeitraum: 24.06.2019 bis 01.07.2019
+%   [degC]  -> wird hier nach K umgerechnet
+
 
 if nargin < 1
     csv_datei = fullfile('data', 'geosphere_2019.csv');
@@ -34,7 +24,7 @@ if ~isdatetime(zeit)
 end
 t = seconds(zeit - zeit(1));
 
-% Luecken behandeln: hier lineare Interpolation, Entscheidung dokumentieren
+% Luecken behandeln: lineare Interpolation
 gueltig = ~isnan(G) & ~isnan(Tamb_C) & ~isnan(v);
 if any(~gueltig)
     fprintf('Hinweis: %d von %d Zeilen enthalten Luecken.\n', ...

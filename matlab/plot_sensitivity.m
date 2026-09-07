@@ -7,37 +7,8 @@ for k = 1:numel(namen)
     name = namen{k};
     d    = ergebnis.(name);
 end
-% Tornado-Diagramme: zusammenfassende Darstellung, welcher Parameter
-% welche Zielgroesse am staerksten beeinflusst. Fuer jeden Parameter wird
-% die Spanne der prozentualen Abweichung vom Nominalergebnis ueber alle
-% Testwerte gebildet; die Parameter werden nach dieser Spanne sortiert,
-% groesster Einfluss oben.
-%
-% Wichtig: Die schwebenden Balken werden NICHT durch wiederholte barh()-
-% Aufrufe mit individuellem 'BaseValue' in einer Schleife erzeugt. MATLAB
-% verwendet fuer mehrere per hold-on uebereinandergelegte Bar-Objekte nur
-% eine gemeinsame Baseline pro Achse, die vom zuletzt gezeichneten Balken
-% ueberschrieben wird - alle Balken haetten dann denselben, falschen
-% linken Rand. Stattdessen wird ein einziger gestapelter barh()-Aufruf
-% verwendet: eine unsichtbare erste Serie (Basiswert, kann negativ sein)
-% traegt jeden Balken an seine korrekte Position, die zweite, sichtbare
-% Serie zeichnet nur die eigentliche Spannweite obendrauf.
-%
-% Zusaetzliche obere Achse: Die Balken sind in Prozent skaliert, aber die
-% absolute Aenderung ist fuer eine physikalische Einordnung oft
-% hilfreicher (z.B. 0.75 % von T_m,max in Kelvin klingt klein, entspricht
-% aber ca. 2-3 K). Da sich innerhalb eines Tornado-Diagramms alle Balken
-% auf denselben Nominalwert beziehen, ist die Umrechnung Prozent ->
-% absolute Einheit fuer das gesamte Diagramm eine einzige lineare
-% Skalierung. Eine zweite, deckungsgleiche Achse oben (gleiche Position,
-% umskaliertes XLim) zeigt daher exakt dieselben Balken zusaetzlich in
-% Kelvin bzw. kWh, ohne den Plot zu verdoppeln.
 zielgroessen = {'Tm_max', 'E_el'};
 zielgroessen_label = {'$T_\mathrm{m,max}$', 'Energieertrag $E_\mathrm{el}$'};
-% Referenzwert je Zielgroesse fuer die obere Achse: Da im Nominalfall alle
-% Parameter gleichzeitig auf ihrem Nominalwert liegen, ist die Simulation
-% an diesem Punkt fuer jede der sechs Studien identisch - es genuegt, den
-% Referenzwert aus der ersten Studie (C_m) zu entnehmen.
 d_ref            = ergebnis.(namen{1});
 [~, i_nom_ref]   = min(abs(d_ref.werte - d_ref.nominal));
 referenzwert.Tm_max = d_ref.Tm_max(i_nom_ref);            % [K]
