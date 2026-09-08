@@ -1,8 +1,4 @@
 %RUN_USECASE  Aufgabenpunkt 5: Anwendungsfall mit GeoSphere-Daten.
-%
-%   Rechnet NUR. Ergebnis landet in results/usecase.mat.
-%   Zusaetzlich werden die Einzelterme der Bilanz mitgeschrieben, weil die
-%   Angabe nach dem dominanten Verlustterm fragt.
 
 close all;
 
@@ -15,7 +11,7 @@ T0    = w.Tamb(0);
 opts  = odeset('RelTol', p.RelTol, 'AbsTol', p.AbsTol);
 [t, Tm] = ode45(@(t, T) pv_thermal_ode(t, T, p, w), tspan, T0, opts);
 
-% Einzelterme nachrechnen (Postprocessing, nicht im Solver)
+% Einzelterme nachrechnen
 G       = w.G(t);
 Tamb    = w.Tamb(t);
 v       = w.v(t);
@@ -39,9 +35,6 @@ energie.rad        = trapz(t, Q_rad);
 energie.el_ideal   = trapz(t, W_el_ideal);
 energie.el_verlust = trapz(t, W_el_verlust);
 
-% isfolder statt exist(...,'dir'): exist sucht auch im MATLAB-Suchpfad und
-% meldet den Ordner dann als vorhanden, obwohl save relativ zum aktuellen
-% Arbeitsverzeichnis schreibt.
 if ~isfolder('results'); mkdir('results'); end
 
 save(fullfile('results', 'usecase.mat'), ...

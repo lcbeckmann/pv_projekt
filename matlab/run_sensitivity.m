@@ -3,27 +3,11 @@
 %   Vorgehen: ein Parameter wird variiert, alle anderen bleiben auf dem
 %   Nominalwert (One-at-a-time). Bewertet wird die Aenderung von
 %   Maximaltemperatur, Mitteltemperatur und Energieertrag.
-%
-%   Interessanter Diskussionspunkt fuers Protokoll: Tuncel et al. finden
-%   bei Stundenwerten praktisch keinen Einfluss der Waermekapazitaet.
-%   Herteleer et al. argumentieren fuer Sekunden- bis Minutenaufloesung
-%   ueber die Zeitkonstante tau. Mit 10-Minuten-Daten liegen wir dazwischen.
 
 close all;
 p_nom = init_parameters();
 w     = load_weather_geosphere();
 
-% Zu untersuchende Parameter und ihre Variationsbereiche
-%
-% A_conv deckt die Annahme ueber die Einbausituation ab: der Nominalfall
-% 2*A gilt fuer ein freistehend aufgestaendertes, beidseitig umstroemtes
-% Modul, der untere Rand 1*A fuer ein dach- oder fassadenintegriertes, bei
-% dem die Rueckseite nicht frei umstroemt wird. Diese Annahme ist als
-% einzige nicht durch Literatur belegt und betrifft mit der Konvektion den
-% dominanten Verlustpfad, siehe init_parameters.m Abschnitt 1.
-%
-% h_a und h_b werden beide variiert, da fuer die McAdams-Korrelation eine
-% breite Literaturstreuung besteht (siehe Abschnitt 3.1 des Protokolls).
 studien = { ...
 'C_m',       p_nom.C_m       * [0.25 0.5 1 2 4]      ; ...
 'h_a',       p_nom.h_a       * [0.5 0.75 1 1.5 2]    ; ...
