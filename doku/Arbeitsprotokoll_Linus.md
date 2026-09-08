@@ -657,6 +657,193 @@ Originaldaten bleibt der Anteil der Wetterannahme.
 
 → Kapitel 5.3 (Diskussion der Abweichungen), Kapitel 9.2 (Grenzen)
 
+## 02.09. Gesamtdurchsicht: Protokoll gegen Code und Kapitel gegeneinander
+
+**Gemacht:** Das kompilierte Protokoll vom 31.08. vollstaendig gegen den
+Repo-Stand geprueft. Reihenfolge: Parametertabelle gegen
+`init_parameters.m`, Zitate gegen `literatur.bib`, Kapitel gegeneinander,
+Simulink-Skripte gegen den MATLAB-Kern.
+
+### A. Falsche Werte und Quellen in der Parametertabelle (Kap. 3)
+
+1. **eps_f steht mit 0,85 im Protokoll, im Code sind es 0,87.** Schlichter
+   Zahlenfehler.
+2. **A = 1,634 m^2 ist mit "Datenblatt" belegt. Ein Datenblatt existiert
+   nicht.** `init_parameters.m` haelt ausdruecklich fest, dass keines
+   vorliegt und die Abmessungen als Industriestandard eines 60-zelligen
+   Moduls angenommen wurden. Die Quellenangabe ist also unzutreffend, und
+   zwar in die riskante Richtung: Sie behauptet eine Belegtheit, die nicht
+   besteht.
+3. **C_m steht als TODO.** Der Wert ist berechenbar und betraegt
+   12,4 kJ/K (7572 J/(m^2 K) mal 1,634 m^2).
+4. Vier Zeilen tragen weiterhin "TODO" als Quelle (alpha, eps_f, h_a, h_b),
+   obwohl die Quellen laengst recherchiert sind und im Code stehen.
+
+### B. Literaturverzeichnis (betrifft Aufgabenpunkt 3 unmittelbar)
+
+5. **Sechs der acht Eintraege in `literatur.bib` werden nirgends zitiert:**
+   Swinbank 1963, Skoplaki & Palyvos 2009, GeoSphere 2019, Duffie & Beckman
+   1991, Driesse et al. 2022, Jones & Underwood 2001. Das Literaturverzeichnis
+   des kompilierten Protokolls enthaelt deshalb genau eine Quelle.
+   Die gesamte Parameterrecherche existiert bisher nur als Kommentar in
+   `init_parameters.m`. Fuer den Aufgabenpunkt "Literaturrecherche der
+   Modellparameter" ist das die groesste Luecke im ganzen Dokument.
+6. Kap. 7.3 nennt Herteleer et al. im Fliesstext, aber ohne `\cite`.
+
+### C. Widersprueche zwischen Kapiteln
+
+7. **Zeitzone, dreifach widerspruechlich.** Kap. 6.1 schreibt, der Datensatz
+   liege in MESZ vor und werde "in UTC+2 umgerechnet" (MESZ *ist* UTC+2, die
+   Aussage ist in sich zirkulaer). Tabelle 3 desselben Abschnitts gibt
+   korrekt UTC an. Die Rohdaten tragen den Suffix +00:00, sind also UTC.
+8. Tabelle 3 nennt als Ende des Zeitraums den **01.07.2029** statt 2019.
+9. Tom bezeichnet den gewaehlten Validierungsweg als "Option B", in
+   `annahmen.md` laeuft derselbe Weg unter a).
+
+### D. Methodische Punkte in der Sensitivitaetsanalyse (Kap. 7)
+
+10. **Prozentangaben bei Temperaturen sind mehrdeutig.** Kap. 7.2 gibt die
+    Empfindlichkeit von T_m,max in Prozent an. Bezogen auf Kelvin sind
+    2,5 Prozent rund 8 K, bezogen auf Grad Celsius rund 1 K. Die Aussage ist
+    ohne Angabe der Bezugsskala nicht interpretierbar. Bei Temperaturen
+    gehoeren absolute Differenzen in Kelvin angegeben.
+11. Der Satz nennt "die drei Einflussreichsten Faktoren", zaehlt dann aber
+    nur zwei auf.
+12. **Die eigene Zeitkonstante fehlt.** Kap. 7.3 zitiert Herteleers
+    tau = 6,3 min, nennt aber nicht den selbst berechneten Wert von rund
+    200 s, also 3,3 min. Genau dieser Vergleich waere das Eigenergebnis.
+
+### E. Unbelegte Behauptung in Kap. 6.3
+
+13. "Die optimale Betriebstemperatur fuer die meisten PV-Anlagen liegt bei
+    20 bis 25 Grad" steht ohne Quelle und ist mit dem eigenen Modell nicht
+    vereinbar: Gl. (3) ist in T_m streng monoton fallend, ein Optimum
+    existiert darin nicht. Je kaelter das Modul, desto hoeher der
+    Wirkungsgrad. Gemeint sind vermutlich die Standardtestbedingungen mit
+    25 Grad, das ist aber ein Referenzpunkt und kein Optimum.
+
+### F. Code
+
+14. **`run_simulink_usecase.m`, Zeile 7:** `Tm_start` wird aus der
+    Lufttemperatur berechnet und danach nie verwendet. Die Anfangsbedingung
+    ist damit nicht angeschlossen; Simulink startet weiterhin bei
+    p.Tm0 = 298,15 K, der MATLAB-Anwendungsfall dagegen bei T_amb(0), also
+    rund 293,85 K. Der Unterschied von etwa 4 K klingt bei tau = 200 s zwar
+    binnen einer halben Stunde ab, macht den Vergleich in Kap. 8.3 aber
+    angreifbar. Der Referenzfall `run_simulink_referenz.m` ist an dieser
+    Stelle sauber, dort starten beide mit p.Tm0.
+15. `doku/Schichtaufbau_Cm_Dokumentation.md` wird in `init_parameters.m`
+    referenziert, existiert aber nicht im Repo.
+
+### G. Positiv geprueft
+
+Der Referenzfall in Kap. 8.1 wurde nachgerechnet und stimmt in allen fuenf
+Groessen: Q_solar = 1176,12 W, W_el = 140,14 W, Q_konv = 581,17 W,
+Q_rad = 454,81 W. Die Bilanz geht auf 0,00 W auf. Damit sind MATLAB- und
+Simulink-Implementierung im stationaeren Punkt nachweislich identisch. Diese
+Aussage steht im Protokoll bisher nur als Zahlenreihe im Fliesstext, obwohl
+sie der eigentliche Inhalt von Kap. 8.3 waere.
+
+→ Betrifft Kapitel 3, 6, 7, 8 und das Literaturverzeichnis
+
+## 03.09. Zweiter Durchgang: Simulink-Teil, Batterie, Plausibilitaetsrechnung
+
+**Gemacht:** Die beim ersten Review ausgelassenen Teile geprueft, vor allem
+den Simulink- und Batterieteil sowie die Vergleichsrechnung in Kap. 6.2.
+
+### 1. Der Vergleich mit den Wien-Energie-Werten rechnet an der falschen Groesse
+
+Kap. 6.2 skaliert den Referenzertrag ueber das **Flaechenverhaeltnis**
+1,633/2,000 = 0,8165. Die Referenzangabe lautet aber "1000 kWh pro kWp",
+ist also **leistungs**bezogen. Die Skalierung muss deshalb ueber die
+Nennleistung erfolgen, nicht ueber die Flaeche.
+
+Die Referenzanlage leistet 435 W auf 2 m^2, das entspricht einem
+Wirkungsgrad von 21,75 %. Unser Modul hat 12,7 %. Beide Anlagen sind also
+nicht flaechengleich vergleichbar; das Referenzmodul ist rund 1,7-mal so
+effizient.
+
+Korrekt gerechnet:
+
+    P_nenn(unser) = 0,127 * 1000 W/m^2 * 1,634 m^2 = 207,5 W = 0,2075 kWp
+    E_Jahr        = 0,2075 kWp * 1000 kWh/kWp      = 207,5 kWh
+    E_Sommer      = 207,5 kWh * 0,70               = 145,3 kWh
+    E_Woche       = 145,3 kWh / 123 d * 7 d        = 8,27 kWh
+
+Gerechnet wurden 9,73 kWh. Die Abweichung betraegt damit **+18 Prozent**
+statt der im Protokoll implizit stehenden -32 Prozent gegenueber 14,29 kWh.
+
+**Das Ergebnis wird durch die Korrektur also deutlich besser.** Die Gruppe
+macht sich derzeit schlechter, als sie ist. Und ein Ueberschuss von 18
+Prozent ist zusaetzlich plausibel erklaerbar: Der betrachtete Zeitraum liegt
+Ende Juni, also im ertragsstaerksten Teil des Sommers, waehrend der
+Referenzwert ueber vier Monate mittelt.
+
+**Nebenbei:** Mai, Juni, Juli und August haben zusammen 123 Tage, im
+Protokoll stehen 122.
+
+### 2. Batteriemodell korrigiert einen Modellfehler in der Darstellung
+
+`plot_batterie.m`, Zeile 17:
+
+    P_lade(res.SoC >= 1 - 1e-6) = 0;
+
+Der zugehoerige Kommentar benennt die Ursache selbst: Der Integrator begrenzt
+seinen Ausgang, sein Eingang laeuft weiter. Das Simulink-Modell rechnet also
+weiter Ladeleistung, obwohl die Batterie voll ist, und die Korrektur
+geschieht ausschliesslich im Plotskript.
+
+Folge: In `results/simulink_usecase.mat` steht die **unkorrigierte**
+Ladeleistung. Wer daraus die geladene Energie integriert, erhaelt einen zu
+hohen Wert. Die Begrenzung gehoert ins Modell, etwa ueber eine Rueckfuehrung,
+die die Ladeleistung bei Erreichen der Ladeschlussgrenze abschaltet.
+
+### 3. Batterieparameter ohne Quelle
+
+    p.E_nenn   = 7 kWh
+    p.eta_lade = 0,90
+    p.SoC0     = 0,20
+
+Alle drei ohne Quellenangabe, waehrend jede andere Zeile in
+`init_parameters.m` belegt ist. Dazu die Dimensionierungsfrage: Eine
+Batterie mit 7 kWh an einem einzelnen Modul von 207 W Nennleistung ist
+ungewoehnlich. Das Modul liefert in der gerechneten Woche 9,73 kWh, die
+Batterie fasst also fast den gesamten Wochenertrag. Falls das Absicht ist,
+gehoert die Begruendung ins Protokoll.
+
+### 4. `plot_batterie.m` bricht den gemeinsamen Plotstandard
+
+Als einziges Plotskript umgeht es `save_figure()`: eigene Figurgroesse
+(16 x 11 cm statt 15 x 8 cm), eigener Zielordner (`abbildungen/` statt
+`figures/`), eigener `exportgraphics`-Aufruf. Damit weicht die Schriftgroesse
+im fertigen Dokument von allen anderen Abbildungen ab. Genau das sollte die
+gemeinsame Hilfsfunktion verhindern, die in der zweiten Sitzung beschlossen
+wurde.
+
+### 5. Sensitivitaetsabbildungen im Repo passen nicht mehr zum Code
+
+`plot_sensitivity.m` erzeugt seit dem Umbau auf Tornado-Diagramme Dateien mit
+dem Praefix `tornado_`. In `figures/` liegen weiterhin die alten
+`sensitivitaet_*.pdf`. Das Skript ist nach der Aenderung also nicht mehr
+gelaufen oder die Ergebnisse wurden nicht committet.
+
+Ausserdem: In den Zeilen 6 bis 9 steht eine Schleife, die nur zwei Variablen
+zuweist und sie nie verwendet. Ueberbleibsel des alten Codes.
+
+### 6. Positiv
+
+- Die Korrektur der Normierung (Bezug auf den Nominalwert statt auf die
+  Mitte der Reihe) ist beim Umbau erhalten geblieben.
+- **Das Prozent-Problem ist im Code bereits geloest:** Die Tornado-Diagramme
+  tragen eine zweite Achse mit der absoluten Aenderung in Kelvin bzw. kWh.
+  Der Kommentar benennt die Begruendung sauber. Nur der Protokolltext in
+  Kap. 7.2 zieht noch nicht nach und nennt weiterhin ausschliesslich Prozent.
+- `Protokoll_Simulink.md` ist eine ordentliche Materialsammlung mit
+  Begruendungen statt blosser Beschreibung. Daraus laesst sich Kap. 8 direkt
+  schreiben.
+
+→ Kapitel 6.2, 7.2, 8.1, 8.2 und die Parametertabelle
+
 ---
 
 ## Offen, noch nicht protokolliert
