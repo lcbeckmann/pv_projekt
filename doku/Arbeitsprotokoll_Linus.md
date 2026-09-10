@@ -846,6 +846,197 @@ zuweist und sie nie verwendet. Ueberbleibsel des alten Codes.
 
 ---
 
+## 08.09. Praesentation erstellt, Overleaf-Stand vollstaendig gegengelesen
+
+Alle elf Kapiteldateien aus Overleaf durchgesehen (Stand 08.09.) und daraus
+die Praesentation gebaut. Dabei ist der Abgleich Text gegen Code fortgesetzt
+worden.
+
+**Was seit dem 02.09. geschlossen wurde**
+
+- Kapitel 3 ist vollstaendig: eps_f jetzt 0,87 wie im Code, die Flaeche als
+  Annahme statt als Datenblattwert gekennzeichnet, C_m = 12,4 kJ/K
+  eingetragen, Abschnitte 3.1 und 3.3 geschrieben, alle sieben Quellen
+  zitiert. Schichttabelle nachgerechnet: 7571,9 J/(m²K), daraus 12,4 kJ/K und
+  die +32 % gegenueber Tuncel stimmen.
+- Kapitel 9 war leer und ist jetzt geschrieben.
+- Kapitel 8.2 und 8.3 waren leer und sind jetzt geschrieben.
+- Kapitel 7 nennt die eigene Zeitkonstante und loest den Widerspruch
+  Tuncel/Herteleer auf. Der Zeitraum in Tabelle 3 ist auf 2019 korrigiert.
+- Kapitel 1 und 2 haben einen Verantwortlichen, Kapitel 4 steht vollstaendig.
+
+**Befunde zu Kapitel 8 — zwei eigene Fehldiagnosen korrigiert**
+
+Zuerst hatte ich zwei Widersprueche zwischen Text und Code gemeldet. Beide
+haben sich beim Nachsehen im Modell als falsch erwiesen. Die `pv_simulink.slx`
+liegt unter `matlab/simulink/`; entpackt man sie, stehen die Blockparameter
+als XML darin.
+
+- ZURUECKGEZOGEN: „Der Anfangswert ist nicht angeschlossen." Die
+  Anfangsbedingung des Integrators ist im Modell als `Tm_start` hinterlegt und
+  wird zur Laufzeit aus dem Base Workspace aufgeloest, den
+  `run_simulink_usecase.m` in Zeile 7 fuellt. Kapitel 8.1 ist korrekt. Der
+  Punkt stand schon in der Liste vom 02.09. und war auch dort falsch — ich
+  hatte ihn uebernommen, ohne ihn zu pruefen.
+- ZURUECKGEZOGEN: „Der Text beschreibt den Sollzustand, der Code korrigiert im
+  Plot." Der Batterieintegrator hat `LimitOutput = on` mit den Grenzen 0 und
+  1. Der Ladezustand wird also korrekt begrenzt, das Modell stimmt und
+  Kapitel 8.2 beschreibt es zutreffend.
+
+Was davon uebrig bleibt, und was neu dazukommt:
+
+- Geloggt wird als `P_charge` der Integratoreingang, also die Leistung VOR der
+  Begrenzung. `plot_batterie.m` Zeile 17 gleicht das nur fuer die Darstellung
+  aus. Wer die geladene Energie aus dem gespeicherten Signal integriert,
+  bekommt zu viel. Kein Modellfehler, aber eine Stolperstelle.
+- NEU: `run_simulink_referenz.m` setzt `Tm_start` nicht, und das `InitFcn` des
+  Modells legt nur `p` an. In einer frischen MATLAB-Sitzung bricht das Skript
+  daher mit „Undefined variable Tm_start" ab; nach einem vorherigen
+  Anwendungsfall erbt es dessen Wert stillschweigend. Auf die Zahlen wirkt
+  sich das nicht aus, weil ueber 20 000 s gerechnet wird und die
+  Anfangsbedingung bei tau ~ 200 s abgeklungen ist. Reproduzierbar ist das
+  Skript so aber nicht.
+- Kapitel 8.3 spricht von gleichen Solvereinstellungen. Der Simulink-Lauf
+  setzt zusaetzlich `MaxStep 300`; `run_usecase.m` ruft `odeset` nur mit
+  `RelTol` und `AbsTol` auf. Geprueft, bleibt bestehen.
+
+**Fachlicher Fehler in Kapitel 7**
+
+h_a ist zweimal als „windabhaengiger Konvektionskoeffizient der freien
+Konvektion" bezeichnet. Das ist in sich widerspruechlich: h_a = 5,7 W/(m²K)
+ist der konstante Anteil, windabhaengig ist allein h_b · v.
+
+**Formfehler, die beim Kompilieren durchrutschen**
+
+- Kapitel 5: verirrtes `\textbf{` mitten im Wort „Wer", fettet anderthalb
+  Saetze. In der Bildunterschrift fehlt zweimal der Backslash: `10,K` und
+  `4,K` statt `10\,K` und `4\,K`.
+- Kapitel 9: zehnmal `\\\textbf{...}` nach einer Leerzeile, das gibt
+  „There's no line here to end". Ebenfalls `$...$,K` statt `$...$\,K`.
+- Kapitel 6: Zitierschluessel `\cite{1Komma5°}` enthaelt ein Gradzeichen.
+- `main.tex` traegt noch `\author{Vorname Nachname \and ...}` und es fehlt
+  `\sisetup{output-decimal-marker={,}}`.
+
+**Repo und Overleaf sind auseinandergelaufen**
+
+Das kompilierte Protokoll vom 08.09. enthaelt alle 15 Abbildungen, im Repo
+fehlen `latex/abbildungen/` sowie `tornado_Tm_max.pdf` und `tornado_E_el.pdf`;
+dort liegen noch die alten `sensitivitaet_*.pdf`. Die Abbildungen existieren
+also nur in Overleaf. Anhang A.1 listet neun Dateien, im Repo liegen
+einundzwanzig.
+
+**Praesentation**
+
+`Praesentation_Gruppe40_PV_Modell.pptx` auf dem Desktop. 30 Folien, davon 24
+Vortrag und 6 Backup, 19:40 min reine Redezeit. Reihenfolge Tom (Kap. 1–3) →
+Linus (Kap. 4–5) → Matyas (Kap. 6–7) → Lars (Kap. 8), Grenzen und Fazit
+gemeinsam. Sprechernotizen mit Zeitangabe auf jeder Folie. Abbildungen sind
+als benannte Platzhalter gesetzt und werden von Hand eingefuegt.
+
+Die Plausibilitaetsrechnung gegen Wien Energie steht auf der Backup-Folie in
+der korrigierten, leistungsbezogenen Fassung (8,3 kWh erwartet gegen 9,73 kWh
+gerechnet, also +18 %). Kapitel 6.2 skaliert weiterhin ueber das
+Flaechenverhaeltnis und kommt auf 14,29 kWh. Beides muss vor der Abgabe
+uebereinstimmen.
+
+**Modellskizze**
+
+`Modellskizze_PV_Gruppe40.pdf` auf dem Desktop, A4 quer als Vektorgrafik.
+Vier Felder: Einbausituation im Schnitt mit allen vier Leistungstermen,
+Draufsicht mit Abmessungen, Schichtaufbau mit den Einzelbeitraegen zu c_A,
+sowie eine Uebersicht aller Kennwerte und Randbedingungen. Alle Zahlenwerte
+direkt aus `init_parameters.m` uebernommen.
+
+Die Skizze macht die drei Annahmen sichtbar, die sonst nur im Text stehen:
+horizontale Aufstellung (theta = 0, G_POA = G_glo), freistehende
+Aufstaenderung mit beidseitiger Umstroemung (A_konv = 2A) und der Rahmen
+ausserhalb des Bilanzraums. Ein eigenes Feld benennt ausdruecklich, was die
+Skizze NICHT abbildet, damit sie nicht mehr verspricht als das Modell haelt.
+
+→ Kapitel 5, 6.2, 7.1, 7.2, 8.1, 8.2, 8.3, 9 und `main.tex`;
+  Skizze verwendbar fuer Kapitel 2.1 (derzeit `pv_modellskizze.pdf`)
+
+---
+
+## 10.09. Vortragsvorbereitung, zwei Rechenbefunde dabei
+
+Briefing zum Gesamtprojekt erstellt (Artefakt) und Karteikarten fuer die
+eigenen sechs Folien (`Karteikarten_Praesentation_Linus.pdf`, A4 quer, zwei
+Karten je Seite).
+
+**Zwei Dinge selbst nachgerechnet, die im Protokoll nur behauptet sind**
+
+- Der Gesamtleitwert von 61 W/K in Kap. 4.2 ist jetzt hergeleitet:
+  konvektiv h·A_konv = 13,3 · 3,267 = 43,4 W/K, Strahlung als Ableitung
+  4σ(eps_f+eps_b)T³·A = 17,4 W/K, Summe 60,8. Daraus tau = 12 372/60,8 = 203 s.
+  Der elektrische Rueckkopplungsterm traegt bei G = 800 nur rund 0,7 W/K bei
+  und ist vernachlaessigbar.
+- Die Biot-Zahl, in Kap. 2 nur als „klein" bezeichnet: mit h ~ 24 W/(m²K),
+  L_c = 2,35 mm und k ~ 1 W/(mK) ergibt sich Bi ~ 0,06, also unter 0,1.
+
+**Befund: „Deckt sich mit Herteleer" ist zu stark formuliert**
+
+Folie 8 und Kap. 4.2 sagen, tau decke sich mit Herteleer. Deren Wert ist
+6,3 ± 1,0 min = 378 ± 60 s, unserer 203 s — Faktor 1,9. Das ist dieselbe
+Groessenordnung, aber nicht derselbe Wert. Wer nachrechnet, merkt das.
+Interessant: Mit einseitiger Umstroemung (A_konv = A) faellt der Leitwert auf
+39,1 W/K und tau auf 316 s = 5,3 min, also gerade noch in ihr Band. Das ist
+ein Hinweis darauf, dass Herteleers Module einseitig umstroemt waren, und
+haengt mit der offenen A_konv-Frage zusammen.
+
+**Befund: ein Beitrag in Kap. 5.4 wirkt in die falsche Richtung**
+
+Unter den vier Ursachen der Abweichung steht das konstante
+Transmissions-Absorptions-Produkt. Ein konstantes (tau·alpha) koppelt morgens
+und abends ZU VIEL Leistung ein, macht das Modell dort also zu warm. Der
+beobachtete Fehler ist aber eine Unterschaetzung, vor allem mittags. Der
+Beitrag ist eine echte Fehlerquelle, erklaert das Mittagsdefizit aber gerade
+nicht. Im Text sollte das so stehen, sonst ist es angreifbar.
+
+→ Kapitel 4.2 (Herleitung 61 W/K, Formulierung zu Herteleer), 2.1 (Biot-Zahl),
+  5.4 (Richtung des (tau·alpha)-Beitrags)
+
+---
+
+## 10.09. `run_validation.m` repariert, ohne die Ergebnisse anzutasten
+
+Das Skript brach seit der Aufloesung des Merge-Konflikts in Zeile 76 ab:
+`Tm_paper_h` wurde verwendet, war aber nirgends im Projekt definiert. Da das
+Protokoll bereits abgegeben ist, wurde bewusst nur toter Code entfernt und
+keine Zeile ergaenzt, die in eine Rechnung eingeht.
+
+**Entfernt, 27 Zeilen**
+
+- der Block um `Tm_paper` samt der abstuerzenden Zeile
+- der doppelte Aufruf `fehler = calc_errors(...)`, der den identischen Wert
+  ein zweites Mal berechnete und den ersten ueberschrieb
+- das zweite `save` in dieselbe Datei, das nur zusaetzliche Variablen
+  enthielt
+- der Ausgabeblock fuer `fehler_paper`
+
+**Ergaenzt, 8 Zeilen** — ausschliesslich Kommentar, der festhaelt, warum der
+zweite Vergleich fehlt und dass die Einordnung gegen das Referenzmodell im
+Protokoll ueber den im Paper berichteten MBE von -1,64 K laeuft.
+
+**Warum sich nichts aendern kann**
+
+`t` und `Tm` kommen unveraendert aus `ode45`. `Tm_mess`, `ist_tag`, `G`,
+`Tamb` und `W_el` sind nicht beruehrt. `fehler` wird weiterhin aus genau
+denselben drei Argumenten berechnet — geloescht wurde die Kopie, nicht das
+Original. Das verbleibende `save` schreibt alle Variablen, die
+`plot_validation.m` liest.
+
+**Was ich nicht pruefen konnte**
+
+Ob der aktuelle Array `Tm_mess_h` exakt die abgegebenen 4,32 K reproduziert.
+Das Skript war seit dem Merge nicht lauffaehig, also hat das seither niemand
+verifiziert. Weicht der Lauf ab, ist das eine Abweichung zwischen abgegebenem
+Protokoll und Repo-Stand, die vor dieser Reparatur bestand.
+
+→ keine Kapitelaenderung noetig
+
+---
+
 ## Offen, noch nicht protokolliert
 
 Diese Schritte stehen noch aus. Beim Abarbeiten hier fortschreiben.
@@ -879,3 +1070,4 @@ Diese Schritte stehen noch aus. Beim Abarbeiten hier fortschreiben.
 | Pruefung des exportierten Abbildungs-PDF, Diagnose des Dark-Mode-Problems und Korrektur von `fig_style.m` | Claude (Claude Code) | PDF vor und nach der Korrektur angesehen, Farbwechsel bestaetigt |
 | Durchsicht von Tuncel et al. 2020 auf Fehlerdefinition und Datengrundlage der Abb. 1 | Claude (Claude Code) | Abbildung und Kap. 2.4/3 des Papers selbst gelesen; die Aussage, dass keine Eingangsgroessen veroeffentlicht sind, am Original geprueft |
 | Erweiterung von `calc_errors.m`, Rohfassung der Kapitel 4 und 5.1 | Claude (Claude Code) | Formeln gegen die Standarddefinitionen und die Vorzeichenkonvention des Papers geprueft; Text vor Uebernahme durchgearbeitet |
+| Gegenlesen des vollstaendigen Overleaf-Stands (Kap. 1–10) gegen den Code, Aufbau der Praesentation | Claude (Claude Code) | Jeder Befund im Quelltext an der genannten Zeile nachgesehen (`run_simulink_usecase.m` 7, `plot_batterie.m` 17); Schichttabelle, C_m, Energiebilanz und die Wien-Energie-Rechnung von Hand nachgerechnet; Foliengeometrie automatisiert auf Ueberlauf geprueft |

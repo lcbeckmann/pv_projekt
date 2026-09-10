@@ -15,12 +15,12 @@ cd(fileparts(mfilename('fullpath')));
 
 addpath(genpath(pwd));
 
-rechnen_validierung   = false;   % erst sinnvoll mit den Paperdaten aus Tuncel Abb. 1
-rechnen_anwendung     = false;    % braucht data/geosphere_2019.csv
-rechnen_sensitivitaet = false;   % laeuft laenger
+rechnen_validierung   = true;   % erst sinnvoll mit den Paperdaten aus Tuncel Abb. 1
+rechnen_anwendung     = true;    % braucht data/geosphere_2019.csv
+rechnen_sensitivitaet = true;   % laeuft laenger
 
 plotten_validierung   = true;
-plotten_anwendung     = false;
+plotten_anwendung     = true;
 plotten_sensitivitaet = true;
 
 if rechnen_validierung,   run_validation;   end

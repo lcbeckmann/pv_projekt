@@ -65,15 +65,13 @@ Tm_mess_h = [ ...
 % die der Loeser ohnehin geliefert hat.
 Tm_mess = interp1(h_mess*3600, Tm_mess_h, t, 'linear', 'extrap');
 
-% Modellkurve des Referenzpapers, auf dieselben Zeitpunkte gebracht.
-% Sie dient als zweite Vergleichsgroesse: Waehrend Tm_mess zeigt, wie
-% weit unser Modell von der Messung abweicht, zeigt Tm_paper, welche
-% Abweichung das Referenzmodell mit gemessenen Wetterdaten und einem
-% vollstaendigen Nusselt-Ansatz erreicht. Erst dieser zweite Vergleich
-% erlaubt die Einordnung, welcher Teil unserer Abweichung auf den
-% vereinfachten Ansatz und welcher auf die konstruierten Eingangsdaten
-% entfaellt.
-Tm_paper = interp1(h_mess*3600, Tm_paper_h, t, 'linear', 'extrap');
+% HINWEIS: Ein zweiter Vergleich gegen die MODELLKURVE des Referenzpapers
+% war hier vorgesehen (Tm_paper). Die zugehoerigen 121 Stundenwerte wurden
+% nie digitalisiert, das Array Tm_paper_h existierte nirgends im Projekt.
+% Der unvollstaendige Block ist deshalb entfernt worden; er hat das Skript
+% mit "Unrecognized function or variable 'Tm_paper_h'" abbrechen lassen.
+% Die Einordnung gegen das Referenzmodell erfolgt im Protokoll ueber den
+% im Paper berichteten MBE von -1,64 K, nicht ueber eine eigene Rechnung.
 
 % Fehlermasse getrennt fuer Tag und Nacht, siehe calc_errors.m.
 % Tuncel et al. geben MAE 0.90 degC ueber den gesamten Zeitraum an, aber
@@ -83,17 +81,9 @@ Tm_paper = interp1(h_mess*3600, Tm_paper_h, t, 'linear', 'extrap');
 ist_tag = G > p.G_tag_min;
 fehler  = calc_errors(Tm, Tm_mess, ist_tag);
 
-fehler       = calc_errors(Tm,       Tm_mess, ist_tag);
-fehler_paper = calc_errors(Tm_paper, Tm_mess, ist_tag);
-
 if ~isfolder('results'); mkdir('results'); end
 save(fullfile('results', 'validation.mat'), ...
      't', 'Tm', 'Tamb', 'G', 'W_el', 'Tm_mess', 'fehler', 'p');
-
-
-save(fullfile('results', 'validation.mat'), ...
-     't', 'Tm', 'Tamb', 'G', 'W_el', 'Tm_mess', 'Tm_paper', ...
-     'fehler', 'fehler_paper', 'p');
 
 fprintf('run_validation fertig. %d Zeitschritte, Tm_max = %.1f degC\n', ...
         numel(t), max(Tm) - 273.15);
@@ -108,12 +98,3 @@ if fehler.N > 0
 else
     fprintf('  Keine Messwerte hinterlegt, Fehlermasse noch nicht berechenbar.\n');
 end
-
-
-fprintf('\nReferenzmodell (Tuncel et al.) gegen dieselbe Messung:\n');
-fprintf('  gesamt    MAE %.2f K | RMSE %.2f K | MBE %+.2f K\n', ...
-        fehler_paper.MAE, fehler_paper.RMSE, fehler_paper.MBE);
-fprintf('  tagsueber MAE %.2f K | RMSE %.2f K | MBE %+.2f K\n', ...
-        fehler_paper.tag.MAE, fehler_paper.tag.RMSE, fehler_paper.tag.MBE);
-fprintf('  nachts    MAE %.2f K | RMSE %.2f K | MBE %+.2f K\n', ...
-        fehler_paper.nacht.MAE, fehler_paper.nacht.RMSE, fehler_paper.nacht.MBE);
