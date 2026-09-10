@@ -65,13 +65,15 @@ Tm_mess_h = [ ...
 % die der Loeser ohnehin geliefert hat.
 Tm_mess = interp1(h_mess*3600, Tm_mess_h, t, 'linear', 'extrap');
 
-% HINWEIS: Ein zweiter Vergleich gegen die MODELLKURVE des Referenzpapers
-% war hier vorgesehen (Tm_paper). Die zugehoerigen 121 Stundenwerte wurden
-% nie digitalisiert, das Array Tm_paper_h existierte nirgends im Projekt.
-% Der unvollstaendige Block ist deshalb entfernt worden; er hat das Skript
-% mit "Unrecognized function or variable 'Tm_paper_h'" abbrechen lassen.
-% Die Einordnung gegen das Referenzmodell erfolgt im Protokoll ueber den
-% im Paper berichteten MBE von -1,64 K, nicht ueber eine eigene Rechnung.
+% Modellkurve des Referenzpapers, auf dieselben Zeitpunkte gebracht.
+% Sie dient als zweite Vergleichsgroesse: Waehrend Tm_mess zeigt, wie
+% weit unser Modell von der Messung abweicht, zeigt Tm_paper, welche
+% Abweichung das Referenzmodell mit gemessenen Wetterdaten und einem
+% vollstaendigen Nusselt-Ansatz erreicht. Erst dieser zweite Vergleich
+% erlaubt die Einordnung, welcher Teil unserer Abweichung auf den
+% vereinfachten Ansatz und welcher auf die konstruierten Eingangsdaten
+% entfaellt.
+Tm_paper = interp1(h_mess*3600, Tm_paper_h, t, 'linear', 'extrap');
 
 % Fehlermasse getrennt fuer Tag und Nacht, siehe calc_errors.m.
 % Tuncel et al. geben MAE 0.90 degC ueber den gesamten Zeitraum an, aber
